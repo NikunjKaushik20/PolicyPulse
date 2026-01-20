@@ -31,7 +31,7 @@
 
 **Before running the setup script, you must manually install Tesseract OCR for image-to-text features, and ffmpeg for audio/video support.**
 
-**For full multimodal support (text, image, audio, video) and local LLM reasoning, follow the steps below.**
+**For full multimodal support (text, image, audio, video)  follow the steps below.**
 
 ---
 
@@ -43,7 +43,6 @@
 - **ffmpeg** (audio/video processing)
 - **Tesseract OCR** (image-to-text)
 - **Python 3.11+**
-- **Ollama** or **vLLM** (for local Llama 3.1 reasoning)
 
 ### Install ffmpeg
 - **Windows:** Download from https://ffmpeg.org/download.html and add to PATH
@@ -71,17 +70,12 @@ pip install moviepy opencv-python
 - **Image:** CLIP (auto-downloads)
 - **Audio:** CLAP, Wav2Vec2 (auto-downloads)
 - **Video:** VideoCLIP (see repo for instructions)
-- **LLM:** Download Llama 3.1 8B weights for Ollama/vLLM (see [Modelfile](Modelfile))
 
 ### Start Qdrant (Docker)
 ```bash
 docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
 ```
 
-### Start Local LLM (Ollama)
-```bash
-ollama run llama3:8b
-```
 
 ### Start PolicyPulse
 ```bash
@@ -268,7 +262,6 @@ Analyze policies across three complementary dimensions:
 | **Embeddings** | FastEmbed (CPU), CLIP, CLAP, Wav2Vec2, VideoCLIP | Local text/image/audio/video embeddings |
 | **Hybrid Search** | BM42 (Qdrant) | Dense + Sparse retrieval |
 | **Binary Quantization** | Qdrant BQ | Memory-efficient scaling |
-| **LLM Reasoning** | Ollama/vLLM + Llama 3.1 8B | Local, private, reproducible agentic loop |
 | **Sentiment** | Twitter-RoBERTa | News sentiment classification |
 | **Data Processing** | Pandas 2.1 + NumPy | CSV/TXT parsing |
 | **Frontend** | Streamlit | Interactive UI |
@@ -782,10 +775,6 @@ drift ≤ 0.10 → MINIMAL  (Stable)
 
   # Binary quantization
   "bq_vector": "010101...",          # For memory-efficient scaling
-
-  # Agentic loop outputs
-  "layman_summary": "...",           # LLM-generated summary
-  "advocacy_letter": "...",          # LLM-generated letter
 
   # Evaluation metrics
   "retrieval_score": 0.92,
