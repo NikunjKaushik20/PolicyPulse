@@ -280,6 +280,7 @@ Analyze policies across three complementary dimensions:
 ## Quick Start
 
 ```bash
+# MAKE SURE DOCKER DESKTOP IS RUNNING
 git clone https://github.com/nikunjkaushik20/policypulse.git
 cd policypulse
 setup.bat   # On Windows
@@ -303,13 +304,6 @@ This project requires the Tesseract OCR engine for image-to-text extraction. For
 - **Windows:** Download and install from https://github.com/tesseract-ocr/tesseract. Add the install directory to your PATH.
 - **Linux:** `sudo apt-get install tesseract-ocr`
 - **Mac:** `brew install tesseract`
-
-### Docker Usage
-Build and run the container for a fully reproducible environment:
-```sh
-docker build -t policypulse .
-docker run -p 8501:8501 -p 8000:8000 -p 6333:6333 -p 6334:6334 policypulse
-```
 
 
 ## True Multimodal Support (Text + Image + Audio + Video)
