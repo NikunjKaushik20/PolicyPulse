@@ -1,0 +1,385 @@
+{
+  "policypulse": {
+    "correct": 0,
+    "total": 10,
+    "accuracy": 0.0
+  },
+  "baseline": {
+    "correct": 0,
+    "total": 10,
+    "accuracy": 0.0
+  },
+  "details": [
+    {
+      "query": "What was the original intent of RTI Act in 2005?",
+      "expected": {
+        "query": "What was the original intent of RTI Act in 2005?",
+        "expected_year": "2005",
+        "expected_modality": "temporal",
+        "category": "intent"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.397,
+        "year": 2005,
+        "modality": "temporal",
+        "content_preview": "The Right to Information Act came into force on October 12, empowering citizens to question government actions and seek information. The revolutionary transparency law marked a watershed moment in Indian democracy and governance accountability. Early adopters quickly utilized the law to expose corruption in local bodies, ration distribution, and public works. Bureaucracy showed initial resistance complaining about increased workload and disruption to traditional functioning. Civil society organi",
+        "decay_weight": 0.12,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2005,
+        "modality": "news",
+        "score": 0.6746
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What happened to RTI autonomy in 2019?",
+      "expected": {
+        "query": "What happened to RTI autonomy in 2019?",
+        "expected_year": "2019",
+        "expected_modality": "temporal",
+        "category": "autonomy"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5589,
+        "year": 2019,
+        "modality": "budget",
+        "content_preview": "RTI budget 2019: Allocated Rs 570.0 crore, spent Rs 535.0 crore. Focus: Amendment Act implementation and restructuring",
+        "decay_weight": 0.56,
+        "access_count": 3,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2018,
+        "modality": "news",
+        "score": 0.5842
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did Section 8 exemptions debate evolve in 2013?",
+      "expected": {
+        "query": "How did Section 8 exemptions debate evolve in 2013?",
+        "expected_year": "2013",
+        "expected_modality": "temporal",
+        "category": "exemptions"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.3174,
+        "year": 2013,
+        "modality": "news",
+        "content_preview": "Attempts to Dilute RTI Act Defeated. Civil society successfully resists amendments weakening law (Source: Times of India, 2013)",
+        "decay_weight": 0.28,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2008,
+        "modality": "news",
+        "score": 0.4848
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was RTI budget allocation in 2019?",
+      "expected": {
+        "query": "What was RTI budget allocation in 2019?",
+        "expected_year": "2019",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.8154,
+        "year": 2019,
+        "modality": "budget",
+        "content_preview": "RTI budget 2019: Allocated Rs 570.0 crore, spent Rs 535.0 crore. Focus: Amendment Act implementation and restructuring",
+        "decay_weight": 0.6,
+        "access_count": 4,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2019,
+        "modality": "budget",
+        "score": 0.8154
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did digital RTI portal launch in 2023?",
+      "expected": {
+        "query": "How did digital RTI portal launch in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "temporal",
+        "category": "digital"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5937,
+        "year": 2023,
+        "modality": "news",
+        "content_preview": "RTI Applications Cross 25 Million Mark. Nearly two decades of transparency law shows sustained impact (Source: Business Standard, 2023)",
+        "decay_weight": 0.76,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2016,
+        "modality": "news",
+        "score": 0.6564
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was public reaction to 2019 RTI amendment?",
+      "expected": {
+        "query": "What was public reaction to 2019 RTI amendment?",
+        "expected_year": "2019",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.6247,
+        "year": 2019,
+        "modality": "budget",
+        "content_preview": "RTI 2019 expenditure: Budget utilization 93.9% with focus on Amendment Act implementation and restructuring",
+        "decay_weight": 0.56,
+        "access_count": 3,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2019,
+        "modality": "budget",
+        "score": 0.6247
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What budget was allocated for digital portal in 2023?",
+      "expected": {
+        "query": "What budget was allocated for digital portal in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5618,
+        "year": 2023,
+        "modality": "budget",
+        "content_preview": "RTI budget 2023: Allocated Rs 700.0 crore, spent Rs 665.0 crore. Focus: Proactive disclosure automation systems",
+        "decay_weight": 0.79,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2021,
+        "modality": "budget",
+        "score": 0.5676
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did RTI applications surge in 2008?",
+      "expected": {
+        "query": "How did RTI applications surge in 2008?",
+        "expected_year": "2008",
+        "expected_modality": "news",
+        "category": "usage"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5515,
+        "year": 2008,
+        "modality": "budget",
+        "content_preview": "RTI budget 2008: Allocated Rs 220.0 crore, spent Rs 195.0 crore. Focus: Online filing portals and digitization",
+        "decay_weight": 0.17,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "news",
+        "score": 0.6778
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was digital transformation push in 2024?",
+      "expected": {
+        "query": "What was digital transformation push in 2024?",
+        "expected_year": "2024",
+        "expected_modality": "temporal",
+        "category": "digital"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.3315,
+        "year": 2024,
+        "modality": "budget",
+        "content_preview": "RTI budget 2024: Allocated Rs 750.0 crore, spent Rs 715.0 crore. Focus: Blockchain for immutable record keeping",
+        "decay_weight": 0.84,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "temporal",
+        "score": 0.4694
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did pandemic affect RTI filings in 2020?",
+      "expected": {
+        "query": "How did pandemic affect RTI filings in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "news",
+        "category": "pandemic"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5875,
+        "year": 2020,
+        "modality": "news",
+        "content_preview": "COVID Disrupts RTI Physical Hearings. Lockdowns delay appeals as commissions suspend in-person sessions (Source: The Hindu, 2020)",
+        "decay_weight": 0.56,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2020,
+        "modality": "news",
+        "score": 0.5875
+      },
+      "winner": "Both Wrong"
+    }
+  ],
+  "improvement": 0.0
+}

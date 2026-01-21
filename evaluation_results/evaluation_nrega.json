@@ -1,0 +1,162 @@
+{
+  "total_queries": 10,
+  "correct_year": 0,
+  "correct_modality": 6,
+  "correct_both": 0,
+  "avg_top1_score": 0.575,
+  "details": [
+    {
+      "query": "What was the original intent of NREGA in 2005?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What was the original intent of NREGA in 2005?",
+        "expected_year": "2005",
+        "expected_modality": "temporal",
+        "category": "intent"
+      },
+      "actual": {
+        "year": 2005,
+        "modality": "temporal",
+        "score": 0.5567
+      }
+    },
+    {
+      "query": "How did MGNREGA change in 2009?",
+      "status": "WRONG",
+      "expected": {
+        "query": "How did MGNREGA change in 2009?",
+        "expected_year": "2009",
+        "expected_modality": "temporal",
+        "category": "evolution"
+      },
+      "actual": {
+        "year": 2009,
+        "modality": "news",
+        "score": 0.497
+      }
+    },
+    {
+      "query": "What operational reforms happened in 2014?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What operational reforms happened in 2014?",
+        "expected_year": "2014",
+        "expected_modality": "temporal",
+        "category": "reforms"
+      },
+      "actual": {
+        "year": 2014,
+        "modality": "budget",
+        "score": 0.4258
+      }
+    },
+    {
+      "query": "What was NREGA budget allocation in 2020?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What was NREGA budget allocation in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "actual": {
+        "year": 2020,
+        "modality": "budget",
+        "score": 0.7113
+      }
+    },
+    {
+      "query": "How much did NREGA spend during COVID-19 in 2020?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "How much did NREGA spend during COVID-19 in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "actual": {
+        "year": 2020,
+        "modality": "budget",
+        "score": 0.7097
+      }
+    },
+    {
+      "query": "What happened to NREGA budget in 2023?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What happened to NREGA budget in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "actual": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.7856
+      }
+    },
+    {
+      "query": "What was public discourse about NREGA in 2023?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What was public discourse about NREGA in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "actual": {
+        "year": 2023,
+        "modality": "news",
+        "score": 0.5233
+      }
+    },
+    {
+      "query": "How did media cover NREGA during pandemic in 2020?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "How did media cover NREGA during pandemic in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "actual": {
+        "year": 2020,
+        "modality": "news",
+        "score": 0.5731
+      }
+    },
+    {
+      "query": "What was the focus on women participation in 2018?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What was the focus on women participation in 2018?",
+        "expected_year": "2018",
+        "expected_modality": "temporal",
+        "category": "focus"
+      },
+      "actual": {
+        "year": 2018,
+        "modality": "budget",
+        "score": 0.3106
+      }
+    },
+    {
+      "query": "What budget constraints emerged in 2023?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What budget constraints emerged in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "temporal",
+        "category": "constraints"
+      },
+      "actual": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.6587
+      }
+    }
+  ],
+  "accuracy_year": 0.0,
+  "accuracy_modality": 0.6,
+  "accuracy_both": 0.0
+}

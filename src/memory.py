@@ -89,36 +89,19 @@ def apply_time_decay(
     policy_id: Optional[str] = None,
     current_year: int = 2026
 ) -> int:
-    """
-    Apply exponential decay to all points based on age.
-    
-    Newer data (closer to current_year) maintains higher relevance weights,
-    while older data naturally decays according to exp(-coefficient * age).
-    
-    Args:
-        policy_id: Optional filter to apply decay only to this policy.
-        current_year: Reference year for age calculation (default 2026).
-        
-    Returns:
-        int: Number of points updated.
-        
-    Raises:
-        Exception: If database operations fail.
-    """
     client = get_client()
-    
-    # Build filter condition if policy is specified
+
     filters = []
     if policy_id:
         filters.append(FieldCondition(key="policy_id", match=MatchValue(value=policy_id)))
-    
+
     scroll_filter = Filter(must=filters) if filters else None
-    
+
+    offset = None              # ✅ FIX 1: initialize offset
+    updated_count = 0          # ✅ FIX 2: initialize counter
+
     while True:
         batch_points, next_offset = client.scroll(
-
-      
-
             collection_name=COLLECTION_NAME,
             scroll_filter=scroll_filter,
             limit=BATCH_SIZE,
@@ -126,19 +109,18 @@ def apply_time_decay(
             with_payload=True,
             with_vectors=False
         )
-        
+
         if not batch_points:
             break
-        
+
         for point in batch_points:
             year = point.payload.get("year")
             if year:
                 try:
                     year_int = int(year)
                     age_years = current_year - year_int
-                    # Exponential decay: weight decreases with age
                     decay_weight = math.exp(-DECAY_COEFFICIENT * age_years)
-                    
+
                     client.set_payload(
                         collection_name=COLLECTION_NAME,
                         payload={
@@ -149,17 +131,18 @@ def apply_time_decay(
                         points=[point.id]
                     )
                     updated_count += 1
-                    
+
                 except ValueError:
                     logger.warning(f"Invalid year format: {year}")
-                    continue
-        
+
         if next_offset is None:
             break
+
         offset = next_offset
-    
+
     logger.info(f"Applied time decay to {updated_count} points")
     return updated_count
+
 
 
 def get_memory_health(policy_id: Optional[str] = None) -> Dict[str, Any]:

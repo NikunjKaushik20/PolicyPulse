@@ -1,0 +1,385 @@
+{
+  "policypulse": {
+    "correct": 0,
+    "total": 10,
+    "accuracy": 0.0
+  },
+  "baseline": {
+    "correct": 0,
+    "total": 10,
+    "accuracy": 0.0
+  },
+  "details": [
+    {
+      "query": "What was the original intent of NREGA in 2005?",
+      "expected": {
+        "query": "What was the original intent of NREGA in 2005?",
+        "expected_year": "2005",
+        "expected_modality": "temporal",
+        "category": "intent"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5567,
+        "year": 2005,
+        "modality": "temporal",
+        "content_preview": "The National Rural Employment Guarantee Act (NREGA) was passed by Parliament, marking a historic moment in India's social welfare legislation. The Act guaranteed 100 days of wage employment per year to every rural household willing to do unskilled manual work. Initial rollout covered 200 districts across 27 states, focusing primarily on drought-prone and backward regions. The program aimed to create durable assets while providing livelihood security to rural poor. Implementation challenges inclu",
+        "decay_weight": 0.12,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2005,
+        "modality": "news",
+        "score": 0.5857
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did MGNREGA change in 2009?",
+      "expected": {
+        "query": "How did MGNREGA change in 2009?",
+        "expected_year": "2009",
+        "expected_modality": "temporal",
+        "category": "evolution"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.497,
+        "year": 2009,
+        "modality": "news",
+        "content_preview": "NREGA Becomes Recession Safety Net. Budget doubled as program cushions rural economy from global crisis (Source: Economic Times, 2009)",
+        "decay_weight": 0.19,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2013,
+        "modality": "news",
+        "score": 0.5411
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What operational reforms happened in 2014?",
+      "expected": {
+        "query": "What operational reforms happened in 2014?",
+        "expected_year": "2014",
+        "expected_modality": "temporal",
+        "category": "reforms"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.4258,
+        "year": 2014,
+        "modality": "budget",
+        "content_preview": "NREGA budget 2014: Allocated Rs 34000.0 crore, spent Rs 32976.0 crore. Focus: Efficiency improvements and convergence schemes",
+        "decay_weight": 0.31,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2014,
+        "modality": "budget",
+        "score": 0.4258
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was NREGA budget allocation in 2020?",
+      "expected": {
+        "query": "What was NREGA budget allocation in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.7113,
+        "year": 2020,
+        "modality": "budget",
+        "content_preview": "NREGA budget 2020: Allocated Rs 61500.0 crore, spent Rs 111170.0 crore. Focus: COVID emergency response and migrant employment",
+        "decay_weight": 0.58,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.8265
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How much did NREGA spend during COVID-19 in 2020?",
+      "expected": {
+        "query": "How much did NREGA spend during COVID-19 in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.7097,
+        "year": 2020,
+        "modality": "budget",
+        "content_preview": "NREGA 2020 expenditure: Budget utilization 180.8% with focus on COVID emergency response and migrant employment",
+        "decay_weight": 0.58,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2020,
+        "modality": "budget",
+        "score": 0.7097
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What happened to NREGA budget in 2023?",
+      "expected": {
+        "query": "What happened to NREGA budget in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.7856,
+        "year": 2023,
+        "modality": "budget",
+        "content_preview": "NREGA budget 2023: Allocated Rs 60000.0 crore, spent Rs 56000.0 crore. Focus: Budget rationalization and pending clearances",
+        "decay_weight": 0.79,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.7856
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was public discourse about NREGA in 2023?",
+      "expected": {
+        "query": "What was public discourse about NREGA in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5233,
+        "year": 2023,
+        "modality": "news",
+        "content_preview": "NREGA Budget Slashed to 60000 Crore. Major cut despite 12000 crore pending liabilities (Source: The Hindu, 2023)",
+        "decay_weight": 0.76,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.5618
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "How did media cover NREGA during pandemic in 2020?",
+      "expected": {
+        "query": "How did media cover NREGA during pandemic in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.5731,
+        "year": 2020,
+        "modality": "news",
+        "content_preview": "NREGA Budget Doubled Mid-Year. Pandemic response includes emergency rural employment allocation (Source: Business Standard, 2020)",
+        "decay_weight": 0.58,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2020,
+        "modality": "news",
+        "score": 0.5731
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What was the focus on women participation in 2018?",
+      "expected": {
+        "query": "What was the focus on women participation in 2018?",
+        "expected_year": "2018",
+        "expected_modality": "temporal",
+        "category": "focus"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.3106,
+        "year": 2018,
+        "modality": "budget",
+        "content_preview": "NREGA budget 2018: Allocated Rs 55000.0 crore, spent Rs 52354.0 crore. Focus: Wage revision and climate adaptation works",
+        "decay_weight": 0.46,
+        "access_count": 1,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2007,
+        "modality": "news",
+        "score": 0.5881
+      },
+      "winner": "Both Wrong"
+    },
+    {
+      "query": "What budget constraints emerged in 2023?",
+      "expected": {
+        "query": "What budget constraints emerged in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "temporal",
+        "category": "constraints"
+      },
+      "policypulse": {
+        "rank": 1,
+        "score": 0.6587,
+        "year": 2023,
+        "modality": "budget",
+        "content_preview": "NREGA 2023 expenditure: Budget utilization 93.3% with focus on Budget rationalization and pending clearances",
+        "decay_weight": 0.79,
+        "access_count": 2,
+        "session_id": null,
+        "interaction_id": null,
+        "pdf_page": null,
+        "audio_timestamp": null,
+        "video_frame": null,
+        "evidence_uri": null,
+        "bq_vector": null,
+        "layman_summary": null,
+        "advocacy_letter": null,
+        "retrieval_score": null,
+        "mrr": null,
+        "hit_rate_5": null,
+        "explain": null
+      },
+      "baseline": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.6587
+      },
+      "winner": "Both Wrong"
+    }
+  ],
+  "improvement": 0.0
+}

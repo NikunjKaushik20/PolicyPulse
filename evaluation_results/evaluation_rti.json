@@ -1,0 +1,162 @@
+{
+  "total_queries": 10,
+  "correct_year": 0,
+  "correct_modality": 4,
+  "correct_both": 0,
+  "avg_top1_score": 0.534,
+  "details": [
+    {
+      "query": "What was the original intent of RTI Act in 2005?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What was the original intent of RTI Act in 2005?",
+        "expected_year": "2005",
+        "expected_modality": "temporal",
+        "category": "intent"
+      },
+      "actual": {
+        "year": 2005,
+        "modality": "temporal",
+        "score": 0.397
+      }
+    },
+    {
+      "query": "What happened to RTI autonomy in 2019?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What happened to RTI autonomy in 2019?",
+        "expected_year": "2019",
+        "expected_modality": "temporal",
+        "category": "autonomy"
+      },
+      "actual": {
+        "year": 2019,
+        "modality": "budget",
+        "score": 0.5589
+      }
+    },
+    {
+      "query": "How did Section 8 exemptions debate evolve in 2013?",
+      "status": "WRONG",
+      "expected": {
+        "query": "How did Section 8 exemptions debate evolve in 2013?",
+        "expected_year": "2013",
+        "expected_modality": "temporal",
+        "category": "exemptions"
+      },
+      "actual": {
+        "year": 2013,
+        "modality": "news",
+        "score": 0.3174
+      }
+    },
+    {
+      "query": "What was RTI budget allocation in 2019?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What was RTI budget allocation in 2019?",
+        "expected_year": "2019",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "actual": {
+        "year": 2019,
+        "modality": "budget",
+        "score": 0.8154
+      }
+    },
+    {
+      "query": "How did digital RTI portal launch in 2023?",
+      "status": "WRONG",
+      "expected": {
+        "query": "How did digital RTI portal launch in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "temporal",
+        "category": "digital"
+      },
+      "actual": {
+        "year": 2023,
+        "modality": "news",
+        "score": 0.5937
+      }
+    },
+    {
+      "query": "What was public reaction to 2019 RTI amendment?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What was public reaction to 2019 RTI amendment?",
+        "expected_year": "2019",
+        "expected_modality": "news",
+        "category": "discourse"
+      },
+      "actual": {
+        "year": 2019,
+        "modality": "budget",
+        "score": 0.6247
+      }
+    },
+    {
+      "query": "What budget was allocated for digital portal in 2023?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "What budget was allocated for digital portal in 2023?",
+        "expected_year": "2023",
+        "expected_modality": "budget",
+        "category": "budget"
+      },
+      "actual": {
+        "year": 2023,
+        "modality": "budget",
+        "score": 0.5618
+      }
+    },
+    {
+      "query": "How did RTI applications surge in 2008?",
+      "status": "WRONG",
+      "expected": {
+        "query": "How did RTI applications surge in 2008?",
+        "expected_year": "2008",
+        "expected_modality": "news",
+        "category": "usage"
+      },
+      "actual": {
+        "year": 2008,
+        "modality": "budget",
+        "score": 0.5515
+      }
+    },
+    {
+      "query": "What was digital transformation push in 2024?",
+      "status": "WRONG",
+      "expected": {
+        "query": "What was digital transformation push in 2024?",
+        "expected_year": "2024",
+        "expected_modality": "temporal",
+        "category": "digital"
+      },
+      "actual": {
+        "year": 2024,
+        "modality": "budget",
+        "score": 0.3315
+      }
+    },
+    {
+      "query": "How did pandemic affect RTI filings in 2020?",
+      "status": "PARTIAL",
+      "expected": {
+        "query": "How did pandemic affect RTI filings in 2020?",
+        "expected_year": "2020",
+        "expected_modality": "news",
+        "category": "pandemic"
+      },
+      "actual": {
+        "year": 2020,
+        "modality": "news",
+        "score": 0.5875
+      }
+    }
+  ],
+  "accuracy_year": 0.0,
+  "accuracy_modality": 0.4,
+  "accuracy_both": 0.0
+}

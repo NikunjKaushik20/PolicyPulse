@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-01-22T00:13:48.891407",
+  "total_policies_evaluated": 2,
+  "total_queries": 20,
+  "overall_accuracy": 0.0,
+  "average_improvement_vs_baseline": 0.0,
+  "policy_results": {
+    "NREGA": {
+      "queries": 10,
+      "accuracy": 0.0,
+      "improvement": 0.0
+    },
+    "RTI": {
+      "queries": 10,
+      "accuracy": 0.0,
+      "improvement": 0.0
+    }
+  }
+}

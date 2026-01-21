@@ -1,0 +1,3 @@
+Policy,Queries,Year Accuracy,Modality Accuracy,Both Accuracy,Avg Score,Baseline Improvement
+NREGA,10,0.0%,60.0%,0.0%,0.5750,+0.0%
+RTI,10,0.0%,40.0%,0.0%,0.5340,+0.0%
