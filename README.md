@@ -49,8 +49,8 @@
 - **Linux:** `sudo apt-get install ffmpeg`
 - **Mac:** `brew install ffmpeg`
 
-### Install Tesseract and add to path
-- **Windows:** https://github.com/tesseract-ocr/tesseract
+### Install Tesseract 
+- **Windows:** https://github.com/tesseract-ocr/tesseract and add to PATH
 - **Linux:** `sudo apt-get install tesseract-ocr`
 - **Mac:** `brew install tesseract`
 ### open docker desktop
