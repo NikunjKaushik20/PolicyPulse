@@ -49,34 +49,18 @@
 - **Linux:** `sudo apt-get install ffmpeg`
 - **Mac:** `brew install ffmpeg`
 
-### Install Tesseract
+### Install Tesseract and add to path
 - **Windows:** https://github.com/tesseract-ocr/tesseract
 - **Linux:** `sudo apt-get install tesseract-ocr`
 - **Mac:** `brew install tesseract`
-
-### Install Python Dependencies
+### open docker desktop
+### start the backend
 ```bash
-pip install -r requirements.txt
-# For local-only embeddings and hybrid search:
-pip install fastembed qdrant-client[fastembed]
-# For audio: CLAP, Wav2Vec2
-pip install transformers librosa soundfile
-# For video: VideoCLIP, moviepy
-pip install moviepy opencv-python
+#for windows:
+./setup.bat
+# For linux
+./setup.sh
 ```
-
-### Download Models (First Run)
-- **Text:** FastEmbed (auto-downloads)
-- **Image:** CLIP (auto-downloads)
-- **Audio:** CLAP, Wav2Vec2 (auto-downloads)
-- **Video:** VideoCLIP (see repo for instructions)
-
-### Start Qdrant (Docker)
-```bash
-docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
-```
-
-
 ### Start PolicyPulse
 ```bash
 streamlit run app.py
