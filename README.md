@@ -2,8 +2,6 @@
 # PolicyPulse 🔍
 *Local, Multimodal, Agentic Policy Governance System*
 
-> Complete documentation for policy analysis system covering architecture, setup, examples, and usage.
-
 ---
 
 ## 📖 Table of Contents
