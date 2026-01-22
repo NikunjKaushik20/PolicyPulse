@@ -143,7 +143,7 @@ st.caption("AI-Powered Policy Evolution Analysis")
 # tabs
 tab = st.radio(
     "Module",
-    ["💬 Chat", "📈 Drift", "📄 Upload", "⚙️ Advanced"],
+    ["💬 Chat", "📈 Drift", "📄 Upload", "🎯 Recommendations", "⚙️ Advanced"],
     horizontal=True,
     label_visibility="collapsed"
 )
@@ -383,6 +383,119 @@ elif tab == "📄 Upload":
     else:
         st.info("👆 Upload a document, image, audio, or video to start")
 
+# RECOMMENDATIONS TAB
+elif tab == "🎯 Recommendations":
+    st.markdown("### 🎯 Policy Recommendations")
+    st.caption("Discover related policies and actionable insights")
+    
+    # Preset recommendation queries
+    st.markdown("**Quick Actions:**")
+    col1, col2, col3 = st.columns(3)
+    
+    preset_query = None
+    with col1:
+        if st.button("📊 Find Related Policies", use_container_width=True):
+            preset_query = "related"
+    with col2:
+        if st.button("⚠️ Identify Conflicts", use_container_width=True):
+            preset_query = "conflicts"
+    with col3:
+        if st.button("💡 Priority Areas", use_container_width=True):
+            preset_query = "priority"
+    
+    st.markdown("---")
+    
+    # Policy selector
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        pol_rec = st.selectbox("Select Policy to Analyze",
+            ["NREGA", "RTI", "NEP", "PM-KISAN", "SWACHH-BHARAT",
+             "DIGITAL-INDIA", "AYUSHMAN-BHARAT", "MAKE-IN-INDIA",
+             "SKILL-INDIA", "SMART-CITIES"],
+            key="rec_policy")
+    with col2:
+        year_rec = st.number_input("Year (Optional)", 
+            min_value=2000, max_value=2026, value=None, 
+            step=1, key="rec_year",
+            help="Leave empty to search across all years")
+    
+    top_k_rec = st.slider("Number of Recommendations", 1, 10, 5, key="rec_top_k")
+    
+    if st.button("🔍 Get Recommendations", type="primary", use_container_width=True) or preset_query:
+        with st.spinner(f"Finding recommendations for {pol_rec}..."):
+            # Build request payload
+            payload = {
+                "policy_id": pol_rec,
+                "top_k": top_k_rec
+            }
+            if year_rec:
+                payload["year"] = int(year_rec)
+            
+            data, err = api_call("/recommendations", "POST", payload)
+            
+            if err:
+                st.error(err)
+            elif data:
+                recommendations = data.get("recommendations", [])
+                count = data.get("count", 0)
+                
+                if count == 0:
+                    st.warning(f"No related policies found for {pol_rec}. Try a different policy or remove year filter.")
+                else:
+                    st.success(f"✅ Found {count} related policies")
+                    
+                    # Display recommendations
+                    st.markdown("### 📋 Related Policies")
+                    
+                    for i, rec in enumerate(recommendations, 1):
+                        with st.container():
+                            # Header with policy info
+                            col1, col2, col3 = st.columns([2, 1, 1])
+                            with col1:
+                                st.markdown(f"**{i}. {rec['policy_id']}**")
+                            with col2:
+                                st.metric("Year", rec.get('year', 'N/A'))
+                            with col3:
+                                similarity = rec.get('similarity_score', 0)
+                                st.metric("Similarity", f"{similarity:.3f}")
+                            
+                            # Sample text preview
+                            sample = rec.get('sample_text', '')
+                            if sample:
+                                st.info(sample)
+                            
+                            # Actionable recommendations based on similarity
+                            if similarity > 0.85:
+                                st.markdown("**🎯 Recommended Action:**")
+                                st.markdown(f"🔴 **HIGH PRIORITY**: Review {rec['policy_id']} alongside {pol_rec} for potential conflicts or redundancies")
+                            elif similarity > 0.70:
+                                st.markdown("**🎯 Recommended Action:**")
+                                st.markdown(f"🟡 **MEDIUM PRIORITY**: Cross-reference {rec['policy_id']} for complementary provisions with {pol_rec}")
+                            else:
+                                st.markdown("**🎯 Recommended Action:**")
+                                st.markdown(f"🟢 **LOW PRIORITY**: Consider {rec['policy_id']} for best practices that could inform {pol_rec}")
+                            
+                            if i < count:
+                                st.divider()
+                    
+                    # Summary recommendations
+                    if preset_query == "conflicts":
+                        st.markdown("---")
+                        st.markdown("### ⚠️ Conflict Analysis")
+                        high_sim = [r for r in recommendations if r.get('similarity_score', 0) > 0.85]
+                        if high_sim:
+                            st.warning(f"Found {len(high_sim)} policies with high similarity (>0.85). These may have overlapping provisions that require review.")
+                        else:
+                            st.info("No high-similarity conflicts detected.")
+                    
+                    elif preset_query == "priority":
+                        st.markdown("---")
+                        st.markdown("### 💡 Priority Recommendations")
+                        st.markdown(f"**For {pol_rec}:**")
+                        st.markdown(f"- Review the top {min(3, count)} related policies for alignment")
+                        st.markdown(f"- Focus on high-similarity policies (>0.85) for conflict resolution")
+                        st.markdown(f"- Use medium-similarity policies (0.70-0.85) for policy enhancement")
+
 # ADVANCED TAB
 elif tab == "⚙️ Advanced":
     st.markdown("### ⚙️ Advanced")
@@ -453,6 +566,41 @@ elif tab == "⚙️ Advanced":
             with c2:
                 for p, cnt in items[mid:]:
                     st.metric(p, cnt)
+    
+    # NEW: Performance Metrics Section
+    st.divider()
+    st.markdown("#### ⚡ Performance Metrics")
+    
+    perf, perf_err = api_call("/performance", "GET")
+    
+    if perf_err:
+        st.info("Performance tracking unavailable")
+    elif perf:
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            avg_query = perf.get("average_query_time_ms", 0)
+            st.metric("Avg Query Time",  f"{avg_query:.0f}ms")
+        with c2:
+            total_ops = perf.get("total_queries", 0) + perf.get("total_drifts", 0) + perf.get("total_recommendations", 0)
+            st.metric("Total Operations", total_ops)
+        with c3:
+            throughput = perf.get("operations_per_minute", 0)
+            st.metric("Throughput", f"{throughput:.1f}/min")
+        with c4:
+            uptime = perf.get("uptime_seconds", 0)
+            st.metric("Uptime", f"{int(uptime//60)}m {int(uptime%60)}s")
+        
+        # Show detailed breakdown in expander
+        with st.expander("📈 Detailed Performance"):
+            st.markdown(f"**Query Performance:**")
+            st.write(f"- Average: {perf.get('average_query_time_ms', 0):.2f}ms")
+            st.write(f"- Min: {perf.get('min_query_time_ms', 0):.2f}ms")
+            st.write(f"- Max: {perf.get('max_query_time_ms', 0):.2f}ms")
+            st.write(f"- Count: {perf.get('total_queries', 0)}")
+            
+            st.markdown(f"**Recommendations Performance:**")
+            st.write(f"- Average: {perf.get('average_recommendation_time_ms', 0):.2f}ms")
+            st.write(f"- Count: {perf.get('total_recommendations', 0)}")
     
     if st.button("🗑️ Clear History"):
         st.session_state.chat_history = []

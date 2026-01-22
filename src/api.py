@@ -29,6 +29,7 @@ from .recommendations import get_related_policies
 from .memory import apply_time_decay, consolidate_memories, get_memory_health
 from .qdrant_setup import get_collection_info, get_client, COLLECTION_NAME
 from .embeddings import embed_text, get_sentiment, embed_image
+from .performance import get_performance_stats, log_query_performance
 import pytesseract
 
 # ===== Logging Configuration =====
@@ -1165,4 +1166,20 @@ def memory_health_endpoint(policy_id: str = None):
         raise
     except Exception as e:
         logger.error(f"Health error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===== Performance Monitoring Endpoint (NEW) =====
+@app.get("/performance")
+def get_performance() -> Dict[str, Any]:
+    """
+    Get real-time performance statistics.
+    
+    Returns:
+        Dict with query latencies, throughput, and uptime metrics.
+    """
+    try:
+        stats = get_performance_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"Performance endpoint error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
