@@ -13,7 +13,6 @@
 - [Key Features](#key-features)
 - [Technology Stack](#technology-stack)
 - [Why Qdrant?](#why-qdrant-not-just-any-vector-db)
-- [Supported Policies](#supported-policies)
 - [Quick Start (5 Minutes)](#quick-start)
 - [API Endpoints](#api-endpoints)
 - [System Architecture](#system-architecture)
