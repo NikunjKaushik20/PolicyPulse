@@ -239,7 +239,7 @@ def _ingest_budget_file(file_path: str, policy_id: str) -> int:
                 year = str(row['year'])
                 # Handle multiple column naming conventions
                 allocated_crores = float(row.get('allocated_crores', row.get('be_crores', row.get('allocation', 0))))
-                spent_crores = float(row.get('spent_crores', row.get('expenditure_crores', row.get('expenditure', 0))))
+                spent_crores = float(row.get('spent_crores', row.get('expenditure_crores', row.get('expenditure', row.get('disbursed_crores', 0)))))
                 focus_area = row.get('focus_area', row.get('focus', 'General development'))
                 
                 # Create multiple text variants for better retrieval

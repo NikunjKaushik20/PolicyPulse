@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 # Policy name mappings (English + Hindi + common variations)
 POLICY_ALIASES = {
-    # NREGA
     'nrega': 'NREGA',
     'mgnrega': 'NREGA',
     'एनआरेगा': 'NREGA',
@@ -23,6 +22,11 @@ POLICY_ALIASES = {
     'mahatma gandhi': 'NREGA',
     'employment guarantee': 'NREGA',
     'रोजगार गारंटी': 'NREGA',
+    'ந்ரேகா': 'NREGA', # Tamil
+    'தேசிய ஊரக வேலை உறுதி': 'NREGA', # Tamil (National Rural Employment Guarantee)
+    'ഗ്രാമീണ തൊഴിലുറപ്പ്': 'NREGA', # Malayalam
+    'ಉದ್ಯೋಗ ಖಾತರಿ': 'NREGA', # Kannada
+    'ఉపాధి హామీ': 'NREGA', # Telugu (for good measure)
     
     # RTI
     'rti': 'RTI',
@@ -139,6 +143,73 @@ def extract_years_from_query(query: str) -> Tuple[Optional[int], Optional[int]]:
     return (None, None)
 
 
+def extract_demographics(query: str) -> Dict[str, Any]:
+    """
+    Extract demographic information from query.
+    
+    Returns:
+        Dict with keys: age, gender, category, occupation, location_type
+    """
+    demographics = {}
+    query_lower = query.lower()
+    
+    # 1. Age extraction
+    # patterns: "19 year old", "19yo", "age 19", "19 years", "19 yrs"
+    # Added: 'age 20', '20 age'
+    age_patterns = [
+        r'\b(\d{1,2})\s*(?:years?|yrs?|yo|age)\b', # 19 years, 19 age
+        r'\bage\s*(\d{1,2})\b' # age 19
+    ]
+    
+    for pattern in age_patterns:
+        age_match = re.search(pattern, query_lower)
+        if age_match:
+            try:
+                demographics['age'] = int(age_match.group(1))
+                break # Stop after first match
+            except ValueError:
+                pass
+            
+    # 2. Gender extraction
+    if any(w in query_lower for w in ['female', 'woman', 'girl', 'lady']):
+        demographics['gender'] = 'female'
+    elif any(w in query_lower for w in ['male', 'man', 'boy', 'gentleman']):
+        demographics['gender'] = 'male'
+        
+    # 3. Category extraction
+    # Use word boundaries for short acronyms
+    if re.search(r'\b(sc|scheduled caste)\b', query_lower):
+        demographics['category'] = 'sc'
+    elif re.search(r'\b(st|scheduled tribe)\b', query_lower):
+        demographics['category'] = 'st'
+    elif re.search(r'\b(obc|backward class)\b', query_lower):
+        demographics['category'] = 'obc'
+    elif 'general' in query_lower:
+        demographics['category'] = 'general'
+        
+    # 4. Occupation extraction
+    occupations = {
+        'farmer': ['farmer', 'agriculture', 'kisan'],
+        'student': ['student', 'studying', 'college', 'school'],
+        'entrepreneur': ['entrepreneur', 'business', 'startup', 'founder'],
+        'unemployed': ['unemployed', 'jobless'],
+        'worker': ['worker', 'laborer', 'labourer']
+    }
+    
+    for occ, keywords in occupations.items():
+        if any(k in query_lower for k in keywords):
+            demographics['occupation'] = occ
+            break
+            
+    # 5. Location extraction
+    if 'rural' in query_lower or 'village' in query_lower:
+        demographics['location_type'] = 'rural'
+    elif 'urban' in query_lower or 'city' in query_lower or 'town' in query_lower:
+        demographics['location_type'] = 'urban'
+        
+    return demographics
+
+
 def build_query_filter(
     policy_id: Optional[str] = None,
     year_start: Optional[int] = None,
@@ -162,12 +233,13 @@ def build_query_filter(
     
     if year_start and year_end:
         if year_start == year_end:
-            # Single year
-            filters.append({"year": year_start})
+            # Single year - ChromaDB stores years as strings!
+            filters.append({"year": str(year_start)})
         else:
-            # Year range - ChromaDB uses $gte/$lte
-            filters.append({"year": {"$gte": year_start}})
-            filters.append({"year": {"$lte": year_end}})
+            # Year range - need to filter by string years
+            # Generate list of years in range and use $in operator
+            year_list = [str(y) for y in range(year_start, year_end + 1)]
+            filters.append({"year": {"$in": year_list}})
     
     if not filters:
         return None
@@ -179,12 +251,13 @@ def build_query_filter(
     return {"$and": filters}
 
 
-def process_query(query: str) -> Dict[str, Any]:
+def process_query(query: str, original_query: Optional[str] = None) -> Dict[str, Any]:
     """
     Process query to extract all relevant parameters.
     
     Args:
-        query: User's question
+        query: User's question (translated to English if applicable)
+        original_query: Original user question (before translation, to catch native entity names)
         
     Returns:
         Dict with:
@@ -193,9 +266,19 @@ def process_query(query: str) -> Dict[str, Any]:
             - year_end: End year or None
             - filter: ChromaDB where filter or None
             - enhanced_query: Query text (may be enhanced for better retrieval)
+            - demographics: Dict of extracted user profile info
     """
     policy_id = detect_policy_from_query(query)
+    
+    # Fallback: Check original text if translation missed the policy name
+    # (e.g. Tamil "NREGA" -> English "Nreka" which fails match, but "ந்ரேகா" matches alias)
+    if not policy_id and original_query:
+        policy_id = detect_policy_from_query(original_query)
+        if policy_id:
+            logger.info(f"Detected policy '{policy_id}' from original query text")
+
     year_start, year_end = extract_years_from_query(query)
+    demographics = extract_demographics(query)
     
     filter_dict = build_query_filter(policy_id, year_start, year_end)
     
@@ -204,10 +287,11 @@ def process_query(query: str) -> Dict[str, Any]:
         "year_start": year_start,
         "year_end": year_end,
         "filter": filter_dict,
-        "enhanced_query": query
+        "enhanced_query": query,
+        "demographics": demographics
     }
     
-    logger.info(f"Query processed: policy={policy_id}, years={year_start}-{year_end}")
+    logger.info(f"Query processed: policy={policy_id}, demographics={demographics}")
     return result
 
 
@@ -215,11 +299,10 @@ def process_query(query: str) -> Dict[str, Any]:
 if __name__ == "__main__":
     test_queries = [
         "what is nrega",
-        "एनआरेगा क्या है?",
-        "what changed in nrega between 2010 and 2012",
+        "suggest policies for 19 year old general male",
+        "I am a farmer looking for loans",
+        "scholarships for sc students in urban areas",
         "PM-KISAN budget in 2020",
-        "आयुष्मान भारत के बारे में बताओ",
-        "what was the news about RTI in 2019",
     ]
     
     print("Testing query processor:")
@@ -228,4 +311,4 @@ if __name__ == "__main__":
         print(f"\n'{q[:40]}...'")
         print(f"  Policy: {result['policy_id']}")
         print(f"  Years: {result['year_start']} - {result['year_end']}")
-        print(f"  Filter: {result['filter']}")
+        print(f"  Demographics: {result['demographics']}")

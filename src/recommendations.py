@@ -9,9 +9,8 @@ Provides functions to:
 
 from typing import List, Dict, Optional, Any
 import logging
-from .qdrant_setup import get_client, COLLECTION_NAME
-from .embeddings import embed_text
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+import chromadb
+from chromadb.utils import embedding_functions
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,28 @@ SEARCH_OVERSAMPLING_FACTOR = 3
 # Content preview length
 SAMPLE_TEXT_LENGTH = 200
 
+# Collection name for ChromaDB
+COLLECTION_NAME = "policy_documents"
+PERSIST_DIRECTORY = "chromadb_data"
+
+_client_instance = None
+_collection_instance = None
+
+def get_collection():
+    """Get or create cached ChromaDB collection."""
+    global _client_instance, _collection_instance
+    if _collection_instance is None:
+        if _client_instance is None:
+            _client_instance = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+        
+        # Use default embedding function (all-MiniLM-L6-v2) or specify one
+        ef = embedding_functions.DefaultEmbeddingFunction()
+        _collection_instance = _client_instance.get_or_create_collection(
+            name=COLLECTION_NAME, 
+            embedding_function=ef
+        )
+    return _collection_instance
+
 
 def get_related_policies(
     policy_id: str,
@@ -34,79 +55,68 @@ def get_related_policies(
 ) -> List[Dict[str, Any]]:
     """
     Find policies related to the given policy based on semantic similarity.
-    
-    Finds a representative sample from the specified policy and searches
-    for similar content across other policies. Returns the best match
-    from each related policy.
-    
-    Args:
-        policy_id: Source policy to find relatives for.
-        year: Optional year filter to find samples from.
-        top_k: Maximum number of related policies to return.
-        
-    Returns:
-        List[Dict] of related policies with similarity scores:
-            - policy_id: Related policy name
-            - year: Year of the match
-            - similarity_score: Cosine similarity (0-1)
-            - sample_text: Preview of the matching content
-            
-    Raises:
-        Exception: If search fails.
     """
-    client = get_client()
+    collection = get_collection()
     
-    # Build filter for source policy
-    source_filter_conditions = [
-        FieldCondition(key="policy_id", match=MatchValue(value=policy_id))
-    ]
-    
+    # Fail-safe if collection empty
+    if collection.count() == 0:
+        logger.warning("No documents in collection.")
+        return []
+
+    # Get sample document from source policy
+    where_filter = {"policy_id": policy_id}
     if year:
-        source_filter_conditions.append(
-            FieldCondition(key="year", match=MatchValue(value=str(year)))
-        )
-    
-    # Retrieve sample point from source policy
-    sample_points, _ = client.scroll(
-        collection_name=COLLECTION_NAME,
-        scroll_filter=Filter(must=source_filter_conditions),
+        where_filter["year"] = int(year)  # Chroma assumes standard types
+
+    results = collection.get(
+        where=where_filter,
         limit=1,
-        with_vectors=True
+        include=["embeddings"]
     )
     
-    if not sample_points:
+    if not results['embeddings']:
         logger.warning(f"No sample found for policy {policy_id}")
         return []
     
-    sample_vector = sample_points[0].vector
+    sample_embedding = results['embeddings'][0]
     
-    # Search across other policies for similar content
-    search_results = client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=sample_vector,
-        query_filter=Filter(
-            must_not=[
-                FieldCondition(key="policy_id", match=MatchValue(value=policy_id))
-            ]
-        ),
-        limit=top_k * SEARCH_OVERSAMPLING_FACTOR  # Over-fetch for deduplication
+    # Query for similar documents from OTHER policies
+    # Chroma where clause: policy_id != source_policy_id
+    search_results = collection.query(
+        query_embeddings=[sample_embedding],
+        n_results=top_k * SEARCH_OVERSAMPLING_FACTOR,
+        where={"policy_id": {"$ne": policy_id}}
     )
     
-    # Keep only the best match per policy (deduplication)
+    # Process results
     related_by_policy = {}
-    for result in search_results:
-        related_policy_id = result.payload.get("policy_id")
+    
+    if not search_results['metadatas'] or not search_results['metadatas'][0]:
+        return []
+
+    metadatas = search_results['metadatas'][0]
+    documents = search_results['documents'][0]
+    distances = search_results['distances'][0]  # Smaller is better for L2, cosine dist
+    
+    for i, metadata in enumerate(metadatas):
+        related_policy_id = metadata.get("policy_id")
+        
         if related_policy_id not in related_by_policy:
+            # Simple similarity score conversion (assuming distance is cosine distance ~0..2)
+            # Actually Chroma default is L2. For simplified UX, let's just use 1/(1+dist)
+            dist = distances[i]
+            score = 1 / (1 + dist)
+            
             related_by_policy[related_policy_id] = {
                 "policy_id": related_policy_id,
-                "year": result.payload.get("year"),
-                "similarity_score": result.score,
-                "sample_text": result.payload.get("content", "")[:SAMPLE_TEXT_LENGTH] + "..."
+                "year": metadata.get("year"),
+                "similarity_score": score,
+                "sample_text": (documents[i] or "")[:SAMPLE_TEXT_LENGTH] + "..."
             }
         
         if len(related_by_policy) >= top_k:
             break
-    
+            
     logger.info(f"Found {len(related_by_policy)} related policies for {policy_id}")
     return list(related_by_policy.values())
 
@@ -118,39 +128,27 @@ def get_policy_by_year_range(
 ) -> Dict[int, int]:
     """
     Get count of data points for a policy across a year range.
-    
-    Useful for understanding data coverage and temporal distribution.
-    
-    Args:
-        policy_id: Policy to analyze.
-        start_year: Inclusive start year.
-        end_year: Inclusive end year.
-        
-    Returns:
-        Dict mapping year -> count of data points.
-        Only years with at least 1 point are included.
-        
-    Raises:
-        Exception: If count query fails.
     """
-    client = get_client()
+    collection = get_collection()
     year_distribution = {}
     
-    for year in range(start_year, end_year + 1):
-        # Count points matching policy and year
-        count_result = client.count(
-            collection_name=COLLECTION_NAME,
-            count_filter=Filter(
-                must=[
-                    FieldCondition(key="policy_id", match=MatchValue(value=policy_id)),
-                    FieldCondition(key="year", match=MatchValue(value=str(year)))
-                ]
-            )
-        )
-        
-        if count_result.count > 0:
-            year_distribution[year] = count_result.count
+    # Chroma doesn't have aggregate counts easily, so we iterate (inefficient but works for small data)
+    # Alternatively we just query for the policy_id and aggregate in python
     
+    results = collection.get(
+        where={"policy_id": policy_id},
+        include=["metadatas"]
+    )
+    
+    for meta in results['metadatas']:
+        y_str = meta.get("year")
+        try:
+            y = int(y_str)
+            if start_year <= y <= end_year:
+                year_distribution[y] = year_distribution.get(y, 0) + 1
+        except:
+            pass
+            
     logger.info(f"Year distribution for {policy_id}: {year_distribution}")
     return year_distribution
 
@@ -162,65 +160,45 @@ def get_cross_policy_insights(
 ) -> List[Dict[str, Any]]:
     """
     Find insights across multiple policies for a given query.
-    
-    Performs a single semantic search and groups results by policy,
-    returning the most relevant chunks from each policy. Useful for
-    comparative policy analysis.
-    
-    Args:
-        query_text: Query text to search for across policies.
-        top_policies: Number of policies to include.
-        chunks_per_policy: Number of result chunks per policy.
-        
-    Returns:
-        List[Dict] of policy groups with chunks:
-            - policy_id: Policy name
-            - chunks: List of matching content chunks with scores
-            
-    Raises:
-        Exception: If search fails.
     """
-    client = get_client()
+    collection = get_collection()
     
-    # Embed query and search across all policies
-    query_vector = embed_text(query_text)
-    
-    search_results = client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
-        limit=top_policies * chunks_per_policy * SEARCH_OVERSAMPLING_FACTOR
+    search_results = collection.query(
+        query_texts=[query_text],
+        n_results=top_policies * chunks_per_policy * SEARCH_OVERSAMPLING_FACTOR
     )
     
-    # Group results by policy
+    if not search_results['metadatas'] or not search_results['metadatas'][0]:
+        return []
+
+    metadatas = search_results['metadatas'][0]
+    documents = search_results['documents'][0]
+    distances = search_results['distances'][0]
+    
     policy_groups = {}
-    for result in search_results:
-        policy_id = result.payload.get("policy_id")
+    
+    for i, meta in enumerate(metadatas):
+        policy_id = meta.get("policy_id")
         
-        # Initialize policy group if new
         if policy_id not in policy_groups:
             policy_groups[policy_id] = {
                 "policy_id": policy_id,
                 "chunks": []
             }
-        
-        # Add chunk if we haven't reached the limit for this policy
+            
         if len(policy_groups[policy_id]["chunks"]) < chunks_per_policy:
+            dist = distances[i]
+            score = 1 / (1 + dist)
+            
             policy_groups[policy_id]["chunks"].append({
-                "text": result.payload.get("content"),
-                "year": result.payload.get("year"),
-                "score": result.score
+                "text": documents[i],
+                "year": meta.get("year"),
+                "score": score
             })
-        
-        # Early exit if we have enough policies with enough chunks
+            
+        # Check breakout condition
         if len(policy_groups) >= top_policies:
-            if all(
-                len(group["chunks"]) >= chunks_per_policy
-                for group in policy_groups.values()
-            ):
+            if all(len(g["chunks"]) >= chunks_per_policy for g in policy_groups.values()):
                 break
-    
-    logger.info(
-        f"Cross-policy insights: {len(policy_groups)} policies, "
-        f"{sum(len(g['chunks']) for g in policy_groups.values())} chunks"
-    )
+
     return list(policy_groups.values())

@@ -168,6 +168,37 @@ ELIGIBILITY_RULES = {
         ],
         "application_link": "https://www.education.gov.in/nep",
         "benefits": "Improved education quality, scholarships, vocational training"
+    },
+    
+    "BETI-BACHAO": {
+        "name": "Beti Bachao Beti Padhao",
+        "description": "Campaign for girl child survival and education",
+        "rules": {
+            "gender": ["female"],
+            "location_type": ["rural", "urban"]
+        },
+        "documents_required": [
+            "Aadhar card",
+            "Birth certificate"
+        ],
+        "application_link": "https://wcd.nic.in/bbbp-schemes",
+        "benefits": "Financial incentives and educational support for girl children"
+    },
+    
+    "SUKANYA": {
+        "name": "Sukanya Samriddhi Yojana",
+        "description": "Small deposit scheme for girl child",
+        "rules": {
+            "gender": ["female"],
+            "age_max": 10,  # Entry age limit
+            "location_type": ["rural", "urban"]
+        },
+        "documents_required": [
+            "Birth certificate",
+            "Aadhar card of guardian"
+        ],
+        "application_link": "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=69",
+        "benefits": "High interest rate savings for girl child's future education/marriage"
     }
 }
 
@@ -231,17 +262,41 @@ def check_eligibility(user_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
             if user_occupation not in rules["occupation"]:
                 is_eligible = False
                 reasons.append(f"Only for: {', '.join(rules['occupation'])}")
+                
+        # Gender check
+        if "gender" in rules:
+            user_gender = user_profile.get("gender", "").lower() if user_profile.get("gender") else ""
+            # If user gender is NOT known, we should probably be conservative for 'only female' schemes
+            # But currently we allow if unknown? 
+            # Logic: if rules['gender'] exists, user MUST match it.
+            if user_gender and user_gender not in rules["gender"]:
+                is_eligible = False
+                reasons.append(f"Only for: {', '.join(rules['gender'])}")
+            elif not user_gender:
+                # Strict check: If a scheme is gender-specific (like Beti Bachao),
+                # and we failed to detect gender, do NOT show it.
+                # This prevents "Beti Bachao for 19 year old male" (if extraction failed).
+                is_eligible = False
+                reasons.append(f"Gender verification required")
         
         # Boolean field checks
         bool_fields = ["land_ownership", "has_toilet", "willingness_manual_work", "in_smart_city"]
         for field in bool_fields:
             if field in rules:
-                if user_profile.get(field, False) != rules[field]:
-                    is_eligible = False
-                    if rules[field]:
-                        reasons.append(f"{field.replace('_', ' ').title()} required")
-                    else:
-                        reasons.append(f"Must not have {field.replace('_', ' ')}")
+                # ONLY check if the user has explicitly provided this info.
+                # If unknown, give benefit of doubt (don't exclude).
+                if field in user_profile:
+                    if user_profile[field] != rules[field]:
+                        is_eligible = False
+                        if rules[field]:
+                            reasons.append(f"{field.replace('_', ' ').title()} required")
+                        else:
+                            reasons.append(f"Must not have {field.replace('_', ' ')}")
+                else:
+                    # If field missing, we assume maybe eligible. 
+                    # Exception: If rule says "False" (e.g. Swachh Bharat requires NO toilet),
+                    # and we don't know, maybe we should still show it? Yes.
+                    pass
         
         # Add to results
         if is_eligible:
@@ -252,7 +307,7 @@ def check_eligibility(user_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "benefits": policy_data["benefits"],
                 "documents_required": policy_data["documents_required"],
                 "application_link": policy_data["application_link"],
-                "priority": "HIGH" if policy_id in ["PM-KISAN", "AYUSHMAN-BHARAT", "NREGA"] else "MEDIUM"
+                "priority": "HIGH" if policy_id in ["PM-KISAN", "AYUSHMAN-BHARAT", "NREGA", "BETI-BACHAO", "SUKANYA"] else "MEDIUM"
             })
         else:
             # TODO: return ineligible list for UI feedback

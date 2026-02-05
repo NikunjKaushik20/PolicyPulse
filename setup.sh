@@ -7,12 +7,35 @@ echo
 
 # Check Python version
 if ! command -v python3 &> /dev/null; then
-    echo "ERROR: Python not found. Please install Python 3.11+"
+    echo "ERROR: Python not found. Please install Python 3.11"
     exit 1
 fi
 
-echo "[1/6] Installing Python dependencies..."
-pip3 install -r requirements.txt
+# Mac-specific checks (libsndfile for librosa)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if command -v brew &> /dev/null; then
+        echo "Checking for libsndfile (needed for audio features on Mac)..."
+        if ! brew list libsndfile &> /dev/null; then
+            echo "Installing libsndfile via Homebrew..."
+            brew install libsndfile
+        fi
+    else
+        echo "WARNING: Homebrew not found. Ensure 'libsndfile' is installed manually for audio support."
+    fi
+fi
+
+echo "[1/6] Setting up Virtual Environment..."
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate venv
+source venv/bin/activate
+
+echo "[2/6] Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install dependencies"
     exit 1
@@ -51,11 +74,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo
-echo "[5/6] Running data migration (if Qdrant data exists)..."
-python3 migrate_to_chromadb.py
-
-echo
-echo "[6/6] Ingesting policy data..."
+echo "[5/5] Ingesting policy data..."
 python3 cli.py ingest-all
 if [ $? -ne 0 ]; then
     echo "WARNING: Data ingestion had some issues. Check logs."

@@ -1,203 +1,213 @@
-# Setup Guide
+# PolicyPulse Setup Guide
 
-Step-by-step guide to get PolicyPulse running on your machine. Tested on Windows 11, Ubuntu 22.04, and WSL2. A judge should be able to run this at 2 AM on a fresh machine.
+Complete setup instructions for running PolicyPulse locally. Tested on Windows 10/11, Ubuntu 22.04, and macOS Ventura.
 
 ---
 
 ## Prerequisites
 
-| Requirement | Details |
-|-------------|---------|
-| Python | 3.11 or 3.12 (3.10 untested) |
-| pip | Latest version |
-| RAM | 4GB minimum, 8GB recommended |
-| Disk | 2GB for dependencies + data |
-| OS | Windows, Linux, or macOS |
+| Requirement | Version | Check Command |
+|-------------|---------|---------------|
+| Python | 3.11 | `python --version` |
+| pip | 21.0+ | `pip --version` |
+| Git | Any | `git --version` |
+| Tesseract (optional) | 4.0+ | `tesseract --version` |
 
-**Optional (for full features):**
-- Tesseract OCR (for image processing)
-- Internet connection (for translation/TTS—core search works offline)
+**Tesseract** is only needed for document OCR features. Core search works without it.
 
 ---
 
-## Quick Start (Automated)
+## Quick Setup (Recommended)
 
 ### Windows
 
 ```batch
-git clone https://github.com/NikunjKaushik/PolicyPulse.git
+git clone https://github.com/NikunjKaushik20/PolicyPulse.git
 cd PolicyPulse
-setup.bat
+./setup.bat
 ```
 
-The script will:
-1. Check Python version
-2. Install dependencies from `requirements.txt`
-3. Copy `.env.example` to `.env`
-4. Initialize ChromaDB
-5. Ingest policy data (~2 minutes)
-
-After setup completes:
-```batch
-python start.py
-```
-
-Open browser to http://localhost:8000
-
-### Linux/macOS
+### Linux / macOS
 
 ```bash
-git clone https://github.com/NikunjKaushik/PolicyPulse.git
+git clone https://github.com/NikunjKaushik20/PolicyPulse.git
 cd PolicyPulse
 chmod +x setup.sh
 ./setup.sh
-python start.py
 ```
+
+The setup script performs these steps automatically:
+1. Creates Python virtual environment
+2. Installs dependencies from `requirements.txt`
+3. Creates `.env` from `.env.example`
+4. Initializes ChromaDB directory
+5. Ingests all policy data
+
+**Total time:** 3-5 minutes (first run downloads ~400MB of model weights)
 
 ---
 
-## Manual Setup (If Scripts Fail)
+## Manual Setup (Step-by-Step)
 
-### Step 1: Clone Repository
+If the automated script fails, follow these steps:
 
-```bash
-git clone https://github.com/NikunjKaushik/PolicyPulse.git
-cd PolicyPulse
-```
-
-### Step 2: Check Python Version
+### Step 1: Create Virtual Environment
 
 ```bash
-python --version
-```
-
-Expected: `Python 3.11.x` or `3.12.x`
-
-### Step 3: Create Virtual Environment
-
-```bash
+# Windows
 python -m venv venv
-```
-
-Activate it:
-
-**Windows:**
-```batch
 venv\Scripts\activate
-```
 
-**Linux/macOS:**
-```bash
+# Linux/macOS
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-You should see `(venv)` in your terminal prompt.
-
-### Step 4: Install Dependencies
+### Step 2: Install Dependencies
 
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**Expected time:** 2-5 minutes (PyTorch is ~800MB download)
+**Known issue:** NumPy 2.0 breaks ChromaDB. Force compatible version:
+```bash
+pip install "numpy<2.0,>=1.26.0" --upgrade --no-deps
+```
 
-**Installs:**
-- fastapi, uvicorn (API server)
-- chromadb, sentence-transformers (vector search)
-- torch (ML backend)
-- Pillow, pytesseract (OCR)
-- deep-translator, gTTS (translation/TTS)
-- langdetect (language detection)
-- pandas, numpy (data handling)
-
-### Step 5: Configure Environment
+### Step 3: Create Environment File
 
 ```bash
+# Windows
+copy .env.example .env
+
+# Linux/macOS
 cp .env.example .env
 ```
 
-Edit `.env` if you have API keys (ALL OPTIONAL):
-
+Edit `.env` if you want enhanced features (all optional):
 ```
-# Optional: Better translation quality
-GOOGLE_CLOUD_TRANSLATE_KEY=your_key_here
+# Optional API Keys - System works WITHOUT these
 
-# Optional: LLM features (not currently used)
-GEMINI_API_KEY=your_key_here
+# Google Cloud Translation (FREE: 500K chars/month)
+GOOGLE_CLOUD_TRANSLATE_KEY=
 
-# Optional: SMS interface (planned)
-TWILIO_ACCOUNT_SID=your_sid_here
-TWILIO_AUTH_TOKEN=your_token_here
+# Gemini API for enhanced answers (FREE: 60 req/min)
+GEMINI_API_KEY=
+
+# Twilio for SMS bot (not implemented in current version)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
+
+# ChromaDB storage location
+CHROMADB_DIR=./chromadb_data
 ```
 
-**The system works fully without any API keys.** Speech recognition, translation, and TTS use free tiers.
-
-### Step 6: Test ChromaDB
+### Step 4: Initialize ChromaDB
 
 ```bash
-python -c "from src.chromadb_setup import get_client; get_client(); print('ChromaDB OK')"
+# Windows
+python -c "from src.chromadb_setup import get_client; get_client(); print('ChromaDB initialized!')"
+
+# Linux/macOS
+python3 -c "from src.chromadb_setup import get_client; get_client(); print('ChromaDB initialized!')"
 ```
 
-Expected:
+Expected output:
 ```
 ChromaDB client initialized at ./chromadb_data
-ChromaDB OK
+ChromaDB initialized!
 ```
 
-### Step 7: Ingest Policy Data
-
-This is critical. Loads 10 policies × 3 modalities into ChromaDB.
+### Step 5: Ingest Policy Data
 
 ```bash
 python cli.py ingest-all
 ```
 
+This reads all CSV files from `Data/` directory and indexes them in ChromaDB.
+
 Expected output:
 ```
-📦 Starting bulk ingestion for all policies...
+[1/3] Ingesting text data...
+Ingested 45 text documents
+[2/3] Ingesting budget data...
+Ingested 180 budget entries
+[3/3] Ingesting news data...
+Ingested 89 news articles
 
-Processing NREGA...
-✅ NREGA budgets: 63 chunks ingested
-✅ NREGA news: 47 chunks ingested
-✅ NREGA temporal: 21 chunks ingested
-
-Processing RTI...
-✅ RTI budgets: 54 chunks ingested
-...
-
-🎉 Ingestion complete!
-Total chunks: 847
-Time taken: 2m 14s
+Total: 847 documents ingested
 ```
 
-**Takes 1-3 minutes.** Sentence-transformer model downloads on first run (~100MB).
+---
 
-### Step 8: Start Server
+## Running the Application
+
+### Production Mode (Recommended)
+
+Use this for demos, evaluation, or when you're not editing frontend code.
 
 ```bash
 python start.py
 ```
 
-Expected:
+Expected output:
 ```
-==================================================
-PolicyPulse - Government Policy Search System
-==================================================
-
-✅ ChromaDB initialized (847 chunks loaded)
-✅ Starting FastAPI server on port 8000...
-
-🌐 API documentation: http://localhost:8000/docs
-🌐 Main UI: http://localhost:8000
-
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started server process [12345]
+INFO:     Waiting for application startup.
+INFO:     ChromaDB initialized successfully
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
 
-Open http://localhost:8000 in browser.
+**Access:** http://localhost:8000
+
+The backend serves the pre-built React frontend from `static/` (copied from `frontend/dist/`).
 
 ---
 
-## Verification
+### Development Mode
+
+Use this when editing frontend code—changes appear instantly without rebuilding.
+
+**Terminal 1: Start Backend**
+```bash
+python start.py
+# Backend runs on http://localhost:8000
+```
+
+**Terminal 2: Start Frontend Dev Server**
+```bash
+cd frontend
+npm install      # first time only
+npm run dev -- --host
+# Frontend runs on http://localhost:5173
+```
+
+**Access:** http://localhost:5173
+
+The Vite dev server:
+- Hot reloads React code changes instantly
+- Proxies `/query`, `/auth/*`, `/history` etc. to the backend on :8000
+- Shows compilation errors in the browser
+
+---
+
+### Rebuilding Frontend for Production
+
+After making frontend changes, rebuild for production use:
+
+```bash
+cd frontend
+npm run build
+```
+
+This generates `frontend/dist/` which `start.py` serves automatically.
+
+---
+
+## Verifying the Installation
 
 ### Test 1: Health Check
 
@@ -207,120 +217,112 @@ curl http://localhost:8000/health
 
 Expected:
 ```json
-{
-  "status": "healthy",
-  "service": "PolicyPulse API",
-  "version": "2.0",
-  "total_points": 847
-}
+{"status": "healthy"}
 ```
 
-### Test 2: Query Endpoint
+### Test 2: Simple Query
 
 ```bash
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
-  -d '{"query_text": "What is NREGA?", "top_k": 3}'
+  -d '{"query_text": "What is NREGA?"}'
 ```
 
-Should return JSON with `final_answer`, `retrieved_points`, `confidence_score`.
+Expected response contains:
+- `final_answer`: Description of NREGA
+- `confidence_score`: Value between 0-1
+- `sources`: List of retrieved documents
 
-### Test 3: Streamlit UI
+### Test 3: Check ChromaDB Contents
 
-In a separate terminal:
 ```bash
-streamlit run app.py
+python -c "from src.chromadb_setup import get_collection_info; import json; print(json.dumps(get_collection_info(), indent=2))"
 ```
 
-Opens at http://localhost:8501 (alternative interface).
+Expected:
+```json
+{
+  "total_points": 847,
+  "collection_name": "policy_data",
+  "policy_breakdown": {
+    "NREGA": 131,
+    "RTI": 108,
+    "PM-KISAN": 54,
+    ...
+  }
+}
+```
+
+---
+
+## Running Evaluation
+
+To run the full evaluation suite:
+
+```bash
+python run_evaluation.py
+```
+
+This executes 60+ test queries across 10 policies and generates:
+- `evaluation_results/evaluation_*.json` - Detailed results
+- `evaluation_results/evaluation_summary.csv` - Summary metrics
 
 ---
 
 ## Common Issues
 
-### `ModuleNotFoundError: No module named 'src'`
+### Issue: `ModuleNotFoundError: No module named 'chromadb'`
 
-**Cause:** Running Python from wrong directory.
-
-**Fix:**
-```bash
-cd PolicyPulse  # Must be in repo root
-python start.py
-```
-
-### `torch` installation fails (Windows)
-
-**Cause:** pip issues with PyTorch on Windows.
+**Cause:** Virtual environment not activated.
 
 **Fix:**
 ```bash
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Windows
+venv\Scripts\activate
+
+# Linux/macOS
+source venv/bin/activate
 ```
 
-### ChromaDB error: `no such column: collections.topic`
+### Issue: `numpy.core.multiarray failed to import`
 
-**Cause:** Corrupted database from failed ingestion.
-
-**Fix (Windows):**
-```batch
-scripts\fix_chromadb.bat
-```
-
-**Fix (Linux/macOS):**
-```bash
-rm -rf chromadb_data/
-python cli.py ingest-all
-```
-
-### NumPy version conflict
+**Cause:** NumPy 2.0 incompatibility with ChromaDB.
 
 **Fix:**
 ```bash
-pip install "numpy<2.0,>=1.26.0" --upgrade --force-reinstall
+pip install "numpy<2.0,>=1.26.0" --upgrade --no-deps
 ```
 
-### OCR not working
+### Issue: `RuntimeError: Your system has an unsupported version of sqlite3`
 
-**Cause:** Tesseract not installed.
+**Cause:** ChromaDB requires SQLite 3.35+. Common on older Linux systems.
 
-**Windows:**
-1. Download: https://github.com/UB-Mannheim/tesseract/wiki
-2. Install to `C:\Program Files\Tesseract-OCR`
-3. Add to PATH
-
-**Ubuntu/Debian:**
+**Fix:**
 ```bash
-sudo apt update && sudo apt install tesseract-ocr
+pip install pysqlite3-binary
 ```
 
-**macOS:**
+Then add to top of `src/chromadb_setup.py`:
+```python
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+```
+
+### Issue: `OSError: [Errno 98] Address already in use`
+
+**Cause:** Port 8000 is occupied.
+
+**Fix:**
 ```bash
-brew install tesseract
-```
-
-**Verify:**
-```bash
-python -c "import pytesseract; print(pytesseract.get_tesseract_version())"
-```
-
-### Speech recognition fails
-
-**Cause:** No internet (Google Speech API requires internet).
-
-**Fix:** Use text input instead. Core search works offline.
-
-### Port 8000 in use
-
-**Windows:**
-```batch
+# Find process on port 8000
+# Windows
 netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-```
+taskkill /PID <pid> /F
 
-**Linux/macOS:**
-```bash
+# Linux/macOS
 lsof -i :8000
-kill -9 <PID>
+kill -9 <pid>
 ```
 
 Or use different port:
@@ -328,183 +330,106 @@ Or use different port:
 uvicorn src.api:app --port 8001
 ```
 
-### Import takes forever / system freezes
+### Issue: `pytesseract.TesseractNotFoundError`
 
-**Cause:** Low RAM (4GB). Embedding model + ChromaDB competing for memory.
+**Cause:** Tesseract not installed (needed for OCR features only).
+
+**Fix (Windows):**
+Download from: https://github.com/UB-Mannheim/tesseract/wiki
+Add to PATH during installation.
+
+**Fix (Linux):**
+```bash
+sudo apt install tesseract-ocr tesseract-ocr-hin tesseract-ocr-tam tesseract-ocr-tel
+```
+
+**Fix (macOS):**
+```bash
+brew install tesseract tesseract-lang
+```
+
+### Issue: ChromaDB corruption
+
+**Symptoms:** `sqlite3.DatabaseError` or queries returning empty results.
 
 **Fix:**
-1. Close other applications
-2. Ingest one policy at a time:
 ```bash
-python cli.py ingest-policy NREGA
-python cli.py ingest-policy RTI
-```
-
----
-
-## Running Evaluation
-
-```bash
-python run_evaluation.py --policies NREGA RTI --test-endpoints
-```
-
-**Arguments:**
-- `--policies [LIST]`: Which policies to test
-- `--test-endpoints`: Verify API responding
-- `--test-drift`: Test drift detection
-- `--output-dir ./results`: Save location
-
-Expected output:
-```
-🧪 PolicyPulse Evaluation Suite
-
-Testing NREGA (10 queries)...
-✓ Query 1/10: What was the original intent of NREGA in 2005? [0.557]
-...
-
-Summary:
-- Total queries: 20
-- Average similarity: 0.575
-- Year accuracy: 100%
-- Modality accuracy: 60%
-
-Results saved to: evaluation_results/
-```
-
----
-
-## Data Files
-
-The `Data/` directory contains policy data (223 files):
-
-```
-Data/
-├── nrega_budgets.csv
-├── nrega_news.csv
-├── nrega_temporal.txt
-├── rti_budgets.csv
-...
-```
-
-**Budget CSV format:**
-```csv
-year,allocated_crores,spent_crores,focus_area
-2020,60100,58432,Infrastructure development
-```
-
-**News CSV format:**
-```csv
-year,headline,summary,source,sentiment
-2020,NREGA wages increased,Government raises daily wage,The Hindu,positive
-```
-
-**Temporal TXT format:**
-```
-Year 2020:
-The National Rural Employment Guarantee Act saw unprecedented demand during COVID-19...
-```
-
----
-
-## Adding New Policies
-
-To add an 11th policy (e.g., GST):
-
-**1. Create data files:**
-- `Data/gst_budgets.csv`
-- `Data/gst_news.csv`
-- `Data/gst_temporal.txt`
-
-**2. Add mapping in `cli.py`:**
-```python
-POLICY_MAPPINGS = {
-    ...
-    "gst": "GST",
-}
-```
-
-**3. Add eligibility rules in `src/eligibility.py`** (optional)
-
-**4. Re-ingest:**
-```bash
-python cli.py reset-db
+# Delete and reingest
+rm -rf chromadb_data/
 python cli.py ingest-all
 ```
 
 ---
 
-## Docker (Alternative)
+## Optional: Tesseract Language Packs
+
+For OCR in Indian languages:
 
 ```bash
-docker build -t policypulse .
-docker run -p 8000:8000 policypulse
-```
+# Ubuntu/Debian
+sudo apt install tesseract-ocr-hin tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-ben
 
-**Note:** Image is ~3GB due to PyTorch. Native Python recommended for hackathon demo.
-
----
-
-## Environment Variables
-
-| Variable | Required | Default | Purpose |
-|----------|----------|---------|---------|
-| `CHROMADB_DIR` | No | `./chromadb_data` | Vector store location |
-| `GOOGLE_CLOUD_TRANSLATE_KEY` | No | None | Better translation |
-| `GEMINI_API_KEY` | No | None | LLM features (unused) |
-| `TWILIO_ACCOUNT_SID` | No | None | SMS (planned) |
-
----
-
-## Troubleshooting Checklist
-
-If something isn't working:
-
-1. ✅ Python 3.11+ installed (`python --version`)
-2. ✅ Virtual environment activated (`which python` → `venv/`)
-3. ✅ Dependencies installed (`pip list | grep chromadb`)
-4. ✅ `.env` file exists
-5. ✅ ChromaDB initialized (`ls chromadb_data/`)
-6. ✅ Data ingested (`python cli.py stats` → 847 chunks)
-7. ✅ Server running (`curl http://localhost:8000/health`)
-8. ✅ No port conflicts (`netstat -an | grep 8000`)
-
-Debug mode:
-```bash
-python -c "import logging; logging.basicConfig(level=logging.DEBUG); import start"
+# macOS
+brew install tesseract-lang
 ```
 
 ---
 
-## Performance Expectations
+## Optional: Building Frontend (Development)
 
-On typical development hardware (Intel i5, 8GB RAM, SSD):
+The repository includes pre-built frontend files. To rebuild:
 
-| Operation | Time |
-|-----------|------|
-| Initial setup (deps + ingest) | 5-7 minutes |
-| Server startup | 3-5 seconds |
-| Simple query | 150-200ms |
-| Drift analysis | 800ms-1.2s |
-| Query with translation | 400-500ms |
-| Query with TTS | 600-800ms |
-| Image OCR + query | 2-3 seconds |
+```bash
+cd frontend
+npm install
+npm run build
+```
 
-If significantly slower: check RAM usage (swapping), internet (translation lag), disk (HDD vs SSD).
+This generates `frontend/dist/` which is served by FastAPI.
 
----
+For development with hot reload:
+```bash
+cd frontend
+npm run dev
+```
 
-## Post-Setup
-
-1. **Try demo:** Open http://localhost:8000, ask "What is NREGA?"
-2. **Test multimodal:** Upload image with text, see OCR
-3. **Check drift:** Go to Drift tab, select NREGA, analyze
-4. **Run evaluation:** `python run_evaluation.py`
-5. **API docs:** http://localhost:8000/docs
+Then access frontend at http://localhost:5173 (proxies API calls to :8000).
 
 ---
 
-Setup tested on:
-- Windows 11 (Python 3.11)
-- Ubuntu 22.04 (Python 3.11)
-- WSL2 Ubuntu (Python 3.12)
-- macOS Sonoma (Python 3.12, not extensively tested)
+## Environment Variables Reference
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `CHROMADB_DIR` | `./chromadb_data` | Vector database location |
+| `GOOGLE_CLOUD_TRANSLATE_KEY` | (none) | Enhanced translation (optional) |
+| `GEMINI_API_KEY` | (none) | LLM-enhanced answers (optional) |
+| `TWILIO_ACCOUNT_SID` | (none) | SMS bot (not implemented) |
+| `TWILIO_AUTH_TOKEN` | (none) | SMS bot (not implemented) |
+| `TWILIO_PHONE_NUMBER` | (none) | SMS bot (not implemented) |
+
+**Note:** All API keys are optional. Core functionality works without them.
+
+---
+
+## File Sizes After Setup
+
+| Directory | Size | Contents |
+|-----------|------|----------|
+| `venv/` | ~1.5 GB | Python packages + models |
+| `chromadb_data/` | ~50 MB | Vector database |
+| `Data/` | ~2 MB | Source CSV files |
+| `frontend/dist/` | ~5 MB | Built React app |
+
+Total disk usage: **~1.6 GB**
+
+---
+
+## Next Steps
+
+After successful setup:
+
+1. **Start exploring:** Open http://localhost:8000 and try queries
+2. **Run evaluation:** `python run_evaluation.py`
+3. **Read architecture:** See `architecture.md` for system design
+4. **Try examples:** See `examples.md` for query patterns

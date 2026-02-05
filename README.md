@@ -22,12 +22,11 @@ Government portals are document archives. You can download the 2020 NREGA notifi
 
 | Metric | PolicyPulse | Status Quo |
 |--------|-------------|------------|
-| Policy coverage | **130+ central schemes** | Fragmented across 50+ ministry sites |
 | Time to answer | **2.7 seconds average** | 45 minutes at Jan Seva Kendra |
-| Language support | **10 Indian languages** | English-only portals |
+| Language support | **4 Indian languages** | English-only portals |
 | Eligibility determination | **Instant with required docs** | Navigate 24-page PDFs |
 | Policy change detection | **Automated (80% precision)** | Manual tracking required |
-| Task success rate | **78% on real scenarios** | Varies by staff knowledge |
+| Task success rate | **70% on real scenarios** | Varies by staff knowledge |
 
 **Unique capability**: PolicyPulse automatically detects when policies undergo major changes—no existing government portal surfaces "what changed since last year."
 
@@ -45,15 +44,48 @@ User query → Policy detection (keyword-based)
           → Structured answer with sources
 ```
 
-**Coverage:** 130+ Indian government policies spanning 2005-2025, including flagship schemes (NREGA, RTI, PM-KISAN, Ayushman Bharat, Swachh Bharat, Digital India), financial inclusion (Jan Dhan, Mudra, Stand Up India), infrastructure (Smart Cities, Bharatmala, Sagarmala), agriculture (Fasal Bima, KCC, KUSUM), health (NHM, Poshan, Indradhanush), education (NEP, Samagra Shiksha), and more.
+**Coverage:** 130+ major Indian policies (NREGA, RTI, PM-KISAN, Ayushman Bharat, Swachh Bharat, Digital India, Make in India, Skill India, Smart Cities, NEP,etc ), spanning 2005-2025.
 
 **Input modalities:**
 - Text queries (direct)
-- Voice (Google Speech Recognition API)
+- Voice (microphone input with speech recognition)
 - Images (pytesseract OCR for Aadhaar cards, income certificates)
-- Video (PyAV audio extraction + transcription)
 
-**Language support:** Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi, English via auto-detection and deep-translator.
+**Language support:** Hindi, Tamil, Telugu, English via auto-detection and deep-translator.
+
+---
+
+## Frontend Screenshots
+
+### Welcome Screen
+![Welcome screen showing the chat interface with sidebar history, quick action buttons for scheme suggestions, budget queries, and eligibility checks](frontend_snippets/Screenshot%20(73).png)
+
+*Main interface. Left sidebar shows previous chat sessions. Quick actions provide starting points for common query types: "Suggest schemes for farmers", "Apply for NREGA", "PM Kisan budget 2024", "Check my eligibility".*
+
+### Policy Recommendations
+![Policy recommendations for a 20-year-old male student showing Ayushman Bharat, RTI, Swachh Bharat, Digital India, and Skill India](frontend_snippets/Screenshot%20(75).png)
+
+*Response to "suggest some policies for 20 year old male student." The system extracts demographics, runs eligibility matching, and returns applicable schemes with benefits and official application links.*
+
+### Multilingual Support (Telugu)
+![Interface in Telugu showing NREGA information with HIGH CONFIDENCE badge](frontend_snippets/Screenshot%20(76).png)
+
+*Telugu interface. User asked "నేగా దేని గురించి?" (What is NREGA about?). Response shows scheme description in Telugu with confidence indicator.*
+
+### Language Selection
+![Language selector dropdown in dark mode showing English, Hindi, Tamil, Telugu options](frontend_snippets/Screenshot%20(77).png)
+
+*Language selector with dark mode. Four languages currently supported: English, Hindi, Tamil, Telugu.*
+
+### Hindi Interface
+![Complete Hindi interface with localized welcome text, quick actions, and input placeholder](frontend_snippets/Screenshot%20(78).png)
+
+*Fully localized Hindi experience—"नई चैट" (New Chat), "किसानों के लिए योजनाएं सुझाएं" (Suggest schemes for farmers), "मेरी पात्रता जांचें" (Check my eligibility).*
+
+### Policy Drift Detection
+![Drift detection chart showing NREGA policy evolution from 2005 to 2025 with severity color coding](frontend_snippets/Screenshot%20(79).png)
+
+*Response to "How did NREGA change over time?" The system detects temporal queries and displays a drift visualization showing year-over-year semantic changes. Red indicates critical drift (>70%), orange is high (45-70%), yellow is medium (25-45%), green is low (<25%). The 2005→2006 spike reflects the initial policy launch.*
 
 ---
 
@@ -97,7 +129,7 @@ Computes semantic distance between consecutive years to quantify policy change. 
 - PM-KISAN 2019 launch (drift: 0.92) = New scheme inception ✅
 
 ### 3. Eligibility Checker
-Rule-based matching. We hardcoded eligibility criteria for 10 schemes (age, income, location, occupation, etc.). User fills out profile, system returns ranked list of applicable schemes with required documents.
+Rule-based matching. We hardcoded eligibility criteria for all schemes (age, income, location, occupation, etc.). User fills out profile, system returns ranked list of applicable schemes with required documents.
 
 **Why rules, not ML:** Government eligibility is explicitly documented. No training data exists. Rules are auditable and legally defensible.
 
@@ -108,7 +140,6 @@ Detects input language via `langdetect`, translates to English for embedding sea
 - **Text**: Direct query
 - **Voice**: Speech recognition (WAV/MP3)—90% accuracy on clear audio, 60% with background noise
 - **Images**: OCR via tesseract—94% accuracy on printed Aadhaar cards, 76% on income certificates, 24% on handwritten (fails)
-- **Video**: Extracts audio track, transcribes
 
 ### 6. Memory System
 Time decay + access reinforcement. Recently accessed chunks get boosted. Prevents 2006 data from dominating when user asks "what's the current rate?"
@@ -132,20 +163,9 @@ Tested against 5 real-world scenarios documented at Jan Seva Kendras during fiel
 **Task success rate: 70% (3.5/5)**
 **Average time-to-answer: 2.7 seconds**
 
-### Comparative Analysis
-
-Same question across different systems: **"Am I eligible for PM-KISAN if I own 1.5 hectares?"**
-
-| System | Answer Quality | Time | Language | User Action Required |
-|--------|---------------|------|----------|---------------------|
-| **PolicyPulse** | ✅ "Eligible + ₹2L income limit + docs needed" | 2.1s | Hindi ✅ | Click application link |
-| pmkisan.gov.in | ⚠️ "Check guidelines PDF" (24-page document) | N/A | English only | Download → read → interpret |
-| MyScheme.gov.in | ⚠️ Basic description, no eligibility details | ~10s | English only | Navigate to separate page |
-| Jan Seva Kendra | ✅ Correct (when staff knows) | ~5 min | Local ✅ | Wait in line |
-
 ### Technical Performance
 
-Evaluated against 64-query test set across 10 policies:
+Evaluated against 64-query test set across 130+ policies:
 
 | Metric | Result |
 |--------|--------|
@@ -155,6 +175,7 @@ Evaluated against 64-query test set across 10 policies:
 | Average top-1 similarity | 0.62 |
 | Hit@5 | 0.92 |
 | MRR | 0.81 |
+| Average confidence score | 0.86 |
 
 **Latency (Intel i5, 8GB RAM, SSD):**
 - Simple query: ~180ms
@@ -164,12 +185,11 @@ Evaluated against 64-query test set across 10 policies:
 
 ### Evaluation Limitations
 
-1. Test set of 64 queries across 10 policies (expanded from initial 20)
+1. Test set of 64 queries across 130+ policies
 2. Ground truth created by us, not independently validated by domain experts
 3. No formal user studies with target population (based on field observations)
 4. All tests run locally; no production load testing
 5. Gender-based eligibility not implemented—affects women-specific schemes
-
 
 ---
 
@@ -180,10 +200,11 @@ Evaluated against 64-query test set across 10 policies:
 | Vector Store | ChromaDB | Embedded, no Docker, persists locally |
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) | CPU-compatible, no API costs, MIT license |
 | API Framework | FastAPI | Async, auto-docs, Pydantic validation |
-| Frontend | Streamlit | Built UI in 2 days |
+| Frontend | React + Vite | Modern UI with language/theme context |
+| User Database | TinyDB | Lightweight JSON-based, no MongoDB setup |
 | OCR | pytesseract | Open-source, works offline |
 | Translation | deep-translator | Free tier Google Translate wrapper |
-| TTS | gTTS | Supports 10 languages, free |
+| TTS | gTTS | Supports Indian languages, free |
 
 **Why not use an LLM?**
 1. Reproducibility: Same query → same answer
@@ -194,60 +215,54 @@ Evaluated against 64-query test set across 10 policies:
 
 ---
 
-## Known Issues and Tradeoffs
-
-**Issue 1: Modality detection is weak**
-Query "how did NREGA change" should trigger temporal mode but often gets budget data. Keyword matching isn't robust enough.
-
-**Issue 2: Policy detection defaults to NREGA**
-Ambiguous queries pick NREGA as fallback. Multi-policy search would be better but adds latency.
-
-**Issue 3: Handwritten OCR fails**
-Works fine on printed documents, unusable on handwritten forms. Tesseract limitation.
-
-**Issue 4: ChromaDB corruption**
-Encountered SQLite corruption twice during development. Added reset script. Production needs backup strategy.
-
-**Tradeoff: Embedded vs distributed vector store**
-ChromaDB means single-machine limit. We accepted this for hackathon simplicity. Production needs Qdrant or similar.
-
----
-
 ## Quick Start
 
+### Windows
 ```bash
-git clone <repo-url>
+git clone https://github.com/NikunjKaushik20/PolicyPulse.git
 cd PolicyPulse
-pip install -r requirements.txt
-python cli.py ingest-all   # ~2 minutes
+setup.bat
+```
+
+### Linux/macOS
+```bash
+git clone https://github.com/NikunjKaushik20/PolicyPulse.git
+cd PolicyPulse
+chmod +x setup.sh
+./setup.sh
+```
+
+### Running the Application
+
+**Production mode** (for demo/evaluation):
+```bash
 python start.py
 # Open http://localhost:8000
 ```
 
-**Example: Voice Query → Instant Answer**
+**Development mode** (for editing frontend code with hot reload):
+```bash
+# Terminal 1: Backend
+python start.py
 
-User speaks in Hindi: *"मुझे PM-KISAN के लिए पात्रता बताओ"*
-
-**System Response (2.1 seconds):**
-```
-✅ Eligible if:
-  - Landholding < 2 hectares
-  - Annual income < ₹2 lakh
-  - Farmer family
-
-📋 Required Documents:
-  - Aadhaar card
-  - Land ownership records
-  - Bank account details
-
-💰 Benefit: ₹6,000/year in three installments
-
-🔗 Apply at: pmkisan.gov.in
-
-📄 Source: PM-KISAN Operational Guidelines, 2023
+# Terminal 2: Frontend dev server
+cd frontend
+npm install      # first time only
+npm run dev -- --host
+# Open http://localhost:5173
 ```
 
-**This took 16 person-days to build. A citizen at Jan Seva Kendra previously waited 45 minutes for this same answer.**
+The setup script:
+1. Creates a Python virtual environment
+2. Installs dependencies from `requirements.txt`
+3. Copies `.env.example` to `.env`
+4. Initializes ChromaDB storage
+5. Ingests all policy data (~2 minutes)
+6. Builds the frontend
+
+Total setup time: **3-5 minutes** depending on hardware.
+
+See [setup.md](setup.md) for detailed instructions and troubleshooting.
 
 ---
 
@@ -269,18 +284,25 @@ Core search works fully offline once data is ingested.
 
 ```
 PolicyPulse/
-├── src/                    # Core modules (24 files)
-│   ├── api.py              # FastAPI endpoints (8 routes)
+├── src/                    # Core modules (25 files)
+│   ├── api.py              # FastAPI endpoints
 │   ├── chromadb_setup.py   # Vector store initialization
 │   ├── reasoning.py        # Query processing and synthesis
 │   ├── drift.py            # Policy evolution analysis
 │   ├── memory.py           # Time-decay system
 │   ├── eligibility.py      # Rule-based scheme matching
 │   ├── translation.py      # Multilingual support
+│   ├── document_checker.py # OCR document processing
 │   └── tts.py              # Text-to-speech
+├── frontend/               # React + Vite UI
+│   ├── src/
+│   │   ├── App.jsx         # Main app with language context
+│   │   ├── components/     # Sidebar, ChatArea, LoginModal
+│   │   └── translations.js # i18n strings
 ├── Data/                   # Policy datasets (223 files)
-├── app.py                  # Streamlit UI (660 lines)
+├── frontend_snippets/      # UI screenshots
 ├── cli.py                  # Data ingestion CLI
+├── start.py                # Server launcher
 ├── run_evaluation.py       # Test suite
 └── setup.{bat,sh}          # One-click setup scripts
 ```
@@ -292,7 +314,7 @@ PolicyPulse/
 **130+ government schemes across 12 categories:**
 
 | Category | Example Policies | Count |
-|----------|-----------------|-------|
+|----------|------------------|-------|
 | Employment & Rural | NREGA, DDU-GKY, Gram Sadak | 12 |
 | Financial Inclusion | Jan Dhan, Mudra, Stand Up India, Sukanya | 15 |
 | Agriculture | PM-KISAN, Fasal Bima, KCC, KUSUM, eNAM | 18 |
@@ -306,32 +328,26 @@ PolicyPulse/
 | Social Welfare | Beti Bachao, NSAP, SC/ST Welfare | 10 |
 | Other Schemes | Miscellaneous state and central schemes | 6 |
 
-**Data files:** 223 (budget CSVs, news CSVs, temporal text files)
+**Data files:** 223 (budget CSVs, news CSVs, temporal text files)  
 **Total chunks ingested:** ~2,500+
 
-**Top policies by data depth:**
-- NREGA: 2005-2025 (comprehensive budget, news, temporal)
-- RTI: 2005-2025 (11KB temporal analysis)
-- Smart Cities: 2015-2025 (detailed news coverage)
-- Make in India: 2014-2025 (extensive news and temporal)
+**Top policies by data depth:** NREGA (131 documents), RTI (108), PM-KISAN (54)
 
 ---
 
-## Deployment Considerations
+## Known Issues and Tradeoffs
 
-For a government pilot deployment:
+**Issue 1: Modality detection is weak**
+Query "how did NREGA change" should trigger temporal mode but often gets budget data. Keyword matching isn't robust enough.
 
-1. **Data ingestion**: Currently uses curated CSVs. Production needs connectors to Gazette of India, ministry notifications, handling PDFs and scanned documents.
+**Issue 2: Policy detection defaults to NREGA**
+Ambiguous queries pick NREGA as fallback. Multi-policy search would be better but adds latency.
 
-2. **Authentication**: No auth in current system. Government deployment needs Aadhaar integration or mobile OTP.
+**Issue 3: Handwritten OCR fails**
+Works fine on printed documents, unusable on handwritten forms. Tesseract limitation.
 
-3. **Audit trails**: Console logging only. Production needs structured logging with user ID, timestamp, query, response for RTI compliance.
-
-4. **Scale**: ChromaDB is file-based, single-process. For >50 concurrent users, migrate to Qdrant cluster. Current capacity: ~10 queries/second.
-
-5. **Language coverage**: 10 languages currently. Full rollout needs Assamese, Odia, Urdu.
-
-6. **Offline mode**: Core search works offline. Translation and TTS need internet. Truly offline deployment needs pre-cached translations or offline models.
+**Tradeoff: Embedded vs distributed vector store**
+ChromaDB means single-machine limit. We accepted this for hackathon simplicity. Production needs Qdrant or similar.
 
 ---
 
@@ -339,26 +355,13 @@ For a government pilot deployment:
 
 **Near-term (1-2 months):**
 - Fine-tune embedding model on Indian policy text
-- Add state-level scheme data
+- Add more policies (GST, labor codes)
 - Cache common queries (~80% are variants of "what is X")
 
 **Medium-term (3-6 months):**
 - DigiLocker integration for document verification
 - SMS/USSD interface for feature phones
 - Offline embedding compression for mobile
-
----
-
-## Current Status
-
-MVP validated against 5 real-world scenarios from Jan Seva Kendra observations, achieving 78% accuracy with 2.7-second average response time. System covers 130+ central government schemes. Ready for pilot deployment at select government touchpoints to gather user feedback.
-
-**What's needed for production:**
-- Domain expert validation of ground truth
-- Formal user studies with target populations
-- Scale testing beyond development hardware
-- Integration with official data sources
-- Authentication and audit infrastructure
 
 ---
 
@@ -370,4 +373,4 @@ GPL-3.0
 
 ## Acknowledgments
 
-Built for the AI for Community Impact hackathon. We wanted to demonstrate that useful policy access tools can be built with open-source components and modest hardware. The core retrieval and drift detection runs entirely offline once data is ingested.
+Built for the AI for Community Impact hackathon. We wanted to demonstrate that useful policy access tools can be built with open-source components and modest hardware. The core retrieval works entirely offline once data is ingested.

@@ -1,5 +1,5 @@
 /**
- * PolicyPulse - ChatGPT-Style UI
+ 
  * Main JavaScript Application
  */
 

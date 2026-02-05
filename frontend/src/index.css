@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Premium Color Palette */
+  --pk-primary: 220 20% 97%;      /* Background Light */
+  --pk-sidebar: 220 15% 94%;     /* Sidebar */
+  --pk-accent: 230 85% 60%;      /* Brand Blue */
+  --pk-text-primary: 220 15% 15%;
+  --pk-text-secondary: 220 10% 45%;
+  
+  --pk-glass-bg: rgba(255, 255, 255, 0.7);
+  --pk-glass-border: rgba(255, 255, 255, 0.5);
+  --pk-glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.dark {
+  --pk-primary: 222 47% 11%;    /* Deep Blue/Black */
+  --pk-sidebar: 217 33% 17%;    /* Lighter Dark */
+  --pk-card:    217 33% 15%;
+  --pk-text-primary: 210 40% 98%;
+  --pk-text-secondary: 215 20% 65%;
+  --pk-glass-bg: rgba(30, 41, 59, 0.7);
+  --pk-glass-border: rgba(255, 255, 255, 0.1);
+  --pk-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+body {
+  margin: 0;
+  background-color: hsl(var(--pk-primary));
+  color: hsl(var(--pk-text-primary));
+  -webkit-font-smoothing: antialiased;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--pk-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--pk-glass-border);
+  box-shadow: var(--pk-glass-shadow);
+}
+
+/* Markdown Styles */
+.prose h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 1em;
+  color: #1a202c;
+}
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.2em;
+  margin: 0.5em 0;
+}
+.prose strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+.prose a {
+  color: hsl(var(--pk-accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

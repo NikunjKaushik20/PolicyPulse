@@ -6,10 +6,9 @@ SENTIMENT_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 EMBEDDING_DIM = 384
 
-# Qdrant configuration  
-QDRANT_HOST = "localhost"
-QDRANT_PORT = 6333
-COLLECTION_NAME = "policy_data" 
+# ChromaDB configuration (Local)
+CHROMA_PERSIST_DIR = "chromadb_data"
+COLLECTION_NAME = "policy_documents" 
 
 # Memory decay parameters
 DECAY_RATE = 0.85

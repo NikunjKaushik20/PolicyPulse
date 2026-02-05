@@ -29,6 +29,8 @@ def ingest_budget_data(policy_id: str, file_path: str):
             expenditure = float(row['expenditure_crores'])
         elif 'expenditure' in df.columns:
             expenditure = float(row['expenditure'])
+        elif 'disbursed_crores' in df.columns:
+            expenditure = float(row['disbursed_crores'])
         
         content = f"Budget for {policy_id} year {year}: allocated {allocation}Cr, spent {expenditure}Cr"
         extra_fields = {}

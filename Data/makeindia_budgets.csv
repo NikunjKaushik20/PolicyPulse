@@ -1,13 +1,13 @@
-year,fdi_billion_usd,manufacturing_gdp_percent,eodb_rank,pli_sectors,focus_area
-2014,45.1,15.1,142,0,Make in India launch September
-2015,55.6,16.2,130,0,25 focus sectors
-2016,60.2,16.8,130,0,Defence manufacturing
-2017,61.0,17.0,100,0,100% FDI sectors expanded
-2018,62.0,17.2,77,0,Ease of Business reforms
-2019,74.4,17.4,63,3,PLI scheme announced
-2020,64.4,15.8,63,10,Aatmanirbhar Bharat
-2021,83.6,16.5,63,13,PLI Rs 1.97 lakh crore
-2022,84.8,17.2,63,14,Electronics manufacturing
-2023,70.9,17.5,63,14,Semicon Mission
-2024,85.0,17.8,39,14,Top 40 EODB ranking
-2025,90.0,18.0,39,15,Manufacturing hub
+year,allocated_crores,spent_crores,fdi_billion_usd,manufacturing_gdp_percent,eodb_rank,pli_sectors,focus_area
+2014,1500,1200,45.1,15.1,142,0,Make in India launch September
+2015,2500,2100,55.6,16.2,130,0,25 focus sectors
+2016,3200,2800,60.2,16.8,130,0,Defence manufacturing
+2017,4000,3500,61.0,17.0,100,0,100% FDI sectors expanded
+2018,5500,4800,62.0,17.2,77,0,Ease of Business reforms
+2019,7500,6800,74.4,17.4,63,3,PLI scheme announced
+2020,15000,12500,64.4,15.8,63,10,Aatmanirbhar Bharat
+2021,197000,45000,83.6,16.5,63,13,PLI Rs 1.97 lakh crore
+2022,35000,28000,84.8,17.2,63,14,Electronics manufacturing
+2023,46450,38000,70.9,17.5,63,14,Semicon Mission
+2024,62000,52000,85.0,17.8,39,14,Top 40 EODB ranking
+2025,75000,65000,90.0,18.0,39,15,Manufacturing hub

@@ -20,6 +20,18 @@ if __name__ == "__main__":
     print("Starting FastAPI server...")
     print("API documentation: http://localhost:8000/docs")
     print("Main UI: http://localhost:8000")
+    
+    # Print LAN IP for remote access
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        print(f"Remote Access: http://{local_ip}:8000 (Use this on your phone!)")
+    except:
+        pass
+
     print()
     print("Press CTRL+C to stop the server")
     print()

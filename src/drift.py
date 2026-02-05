@@ -2,8 +2,7 @@
 from typing import List, Dict, Optional, Any
 import numpy as np
 import logging
-from .qdrant_setup import get_client, COLLECTION_NAME
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+from .chromadb_setup import get_all_documents
 
 logger = logging.getLogger(__name__)
 
@@ -58,43 +57,30 @@ def compute_drift_timeline(
     Raises:
         Exception: If database query fails.
     """
-    client = get_client()
-    
-    if not modality:
-        logger.warning(f"No modality specified for drift analysis on {policy_id}")
-    
-    # Build query filter
-    filter_conditions = [FieldCondition(key="policy_id", match=MatchValue(value=policy_id))]
-    if modality:
-        filter_conditions.append(FieldCondition(key="modality", match=MatchValue(value=modality)))
-    
     # Retrieve all embeddings grouped by year
     years_data = {}
-    offset = None
     
-    while True:
-        batch_points, next_offset = client.scroll(
-            collection_name=COLLECTION_NAME,
-            scroll_filter=Filter(must=filter_conditions),
-            limit=100,
-            offset=offset,
-            with_vectors=True,
-            with_payload=True
-        )
+    # Build query filter
+    where_filter = {"policy_id": policy_id}
+    if modality:
+        where_filter["modality"] = modality
         
-        if not batch_points:
-            break
+    try:
+        results = get_all_documents(where=where_filter, include_embeddings=True)
         
-        for point in batch_points:
-            year = point.payload.get("year")
-            if year:
-                if year not in years_data:
-                    years_data[year] = []
-                years_data[year].append(point.vector)
-        
-        if next_offset is None:
-            break
-        offset = next_offset
+        embeddings = results.get('embeddings')
+        if embeddings is not None and len(embeddings) > 0:
+            for i, embedding in enumerate(results['embeddings']):
+                # Chroma metadata is a list of dicts
+                metadata = results['metadatas'][i]
+                year = metadata.get("year")
+                if year:
+                    if year not in years_data:
+                        years_data[year] = []
+                    years_data[year].append(embedding)
+    except Exception as e:
+        logger.error(f"Failed to retrieve drift data: {e}")
+        return None
     
     # Validate minimum data requirements
     if len(years_data) < MIN_YEARS_FOR_TIMELINE:
@@ -109,7 +95,8 @@ def compute_drift_timeline(
         if len(vectors) >= MIN_SAMPLES_PER_YEAR:
             try:
                 year_int = int(year)
-                valid_years[year_int] = vectors
+                # Ensure vectors are numpy arrays
+                valid_years[year_int] = [np.array(v) for v in vectors]
             except ValueError:
                 logger.warning(f"Invalid year format: {year}")
         else:
@@ -131,12 +118,20 @@ def compute_drift_timeline(
         vectors_to = np.array(valid_years[year_to])
         
         # Compute centroids (mean of all embeddings for each year)
+        # vectors shape: (N, D)
         centroid_from = np.mean(vectors_from, axis=0)
         centroid_to = np.mean(vectors_to, axis=0)
         
         # Normalize for cosine similarity
-        centroid_from_norm = centroid_from / np.linalg.norm(centroid_from)
-        centroid_to_norm = centroid_to / np.linalg.norm(centroid_to)
+        norm_from = np.linalg.norm(centroid_from)
+        norm_to = np.linalg.norm(centroid_to)
+        
+        if norm_from == 0 or norm_to == 0:
+            logger.warning(f"Zero vector encountered for years {year_from} or {year_to}")
+            continue
+            
+        centroid_from_norm = centroid_from / norm_from
+        centroid_to_norm = centroid_to / norm_to
         
         # Compute cosine similarity and convert to drift score
         similarity = np.dot(centroid_from_norm, centroid_to_norm)
@@ -173,7 +168,7 @@ def find_max_drift(
 ) -> Optional[Dict[str, Any]]:
     """
     Find the period with maximum semantic drift.
-    
+
     Args:
         policy_id: Policy to analyze.
         modality: Optional filter (budget/news/temporal).
@@ -185,11 +180,11 @@ def find_max_drift(
         Exception: If analysis fails.
     """
     timeline = compute_drift_timeline(policy_id, modality)
-    
+
     if not timeline or len(timeline) == 0:
         logger.info(f"No drift timeline found for {policy_id}")
         return None
-    
+
     max_period = max(timeline, key=lambda period: period["drift_score"])
     return max_period
 
@@ -197,7 +192,7 @@ def find_max_drift(
 def _classify_drift_severity(drift_score: float) -> str:
     """
     Classify drift score into severity categories.
-    
+
     Args:
         drift_score: Float between 0 and 1.
         

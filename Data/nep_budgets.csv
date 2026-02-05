@@ -1,7 +1,7 @@
-year,education_budget_crores,ger_higher_percent,digital_universities,vocational_schools,focus_area
-2020,99312,27.1,0,5000,NEP 2020 approval July
-2021,93224,28.4,15,10000,Implementation begins
-2022,104278,29.0,50,20000,5+3+3+4 structure
-2023,112899,30.5,100,40000,PM SHRI schools
-2024,120628,32.0,200,80000,Academic Bank of Credits
-2025,128650,34.0,350,150000,GER target 50% by 2035
+year,allocated_crores,spent_crores,education_budget_crores,ger_higher_percent,digital_universities,vocational_schools,focus_area
+2020,99312,85000,99312,27.1,0,5000,NEP 2020 approval July
+2021,93224,88000,93224,28.4,15,10000,Implementation begins
+2022,104278,98000,104278,29.0,50,20000,5+3+3+4 structure
+2023,112899,105000,112899,30.5,100,40000,PM SHRI schools
+2024,120628,112000,120628,32.0,200,80000,Academic Bank of Credits
+2025,128650,120000,128650,34.0,350,150000,GER target 50% by 2035

@@ -153,8 +153,9 @@ def extract_fields(text: str, doc_type: str) -> Dict[str, Any]:
                     break
         
         # Extract DOB - try multiple formats
+        # Extract DOB - try multiple formats
         # Format 1: DD/MM/YYYY
-        dob_match = re.search(r'\b(\d{2}/\d{2}/\d{4})\b', text)
+        dob_match = re.search(r'\b(\d{2}[/]\d{2}[/]\d{4})\b', text)
         if dob_match:
             fields['dob'] = dob_match.group(1)
         else:
@@ -163,22 +164,29 @@ def extract_fields(text: str, doc_type: str) -> Dict[str, Any]:
             if dob_match:
                 fields['dob'] = dob_match.group(1)
             else:
-                # Format 3: Look for "DOB" or "Birth" keywords
-                dob_match = re.search(r'(?:DOB|Birth|जन्म)[:\s]*(\d{2}[/-]\d{2}[/-]\d{4})', text, re.IGNORECASE)
+                # Format 3: Look for "DOB" or "Birth" keywords with relaxed spacing
+                dob_match = re.search(r'(?:DOB|Birth|Date of Birth|जन्म)[:\s]*(\d{2}[/-]\d{2}[/-]\d{4})', text, re.IGNORECASE)
                 if dob_match:
                     fields['dob'] = dob_match.group(1)
-        
+                else:
+                    # Format 4: Year of Birth (YOB) only - common on new Aadhaar
+                    yob_match = re.search(r'(?:Year of Birth|YOB|Year|वर्ष)[:\s-]*(\d{4})', text, re.IGNORECASE)
+                    if yob_match:
+                         fields['dob'] = f"01/01/{yob_match.group(1)}" # Default to Jan 1st
+                         
         # Calculate age from DOB
         if 'dob' in fields:
             try:
                 from datetime import datetime
                 dob_str = fields['dob']
+                today = datetime.now()
+                
                 # Parse date (handle both / and -)
                 if '/' in dob_str:
                     dob_date = datetime.strptime(dob_str, '%d/%m/%Y')
-                else:
+                elif '-' in dob_str:
                     dob_date = datetime.strptime(dob_str, '%d-%m-%Y')
-                today = datetime.now()
+                
                 age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
                 fields['age'] = age
             except:
@@ -279,6 +287,25 @@ def extract_fields(text: str, doc_type: str) -> Dict[str, Any]:
                     fields['locality'] = 'urban'
                 else:
                     fields['locality'] = 'unknown'
+        
+        # Extract Gender
+        # Look for Male/Female/Transgender keywords
+        # Common formats: "Male", "MALE", "Female", "FEMALE", "पुरुष", "महिला"
+        gender_match = re.search(r'\b(Male|Female|Transgender|MALE|FEMALE)\b', text, re.IGNORECASE)
+        if gender_match:
+            raw_gender = gender_match.group(1).lower()
+            if 'female' in raw_gender:
+                fields['gender'] = 'female'
+            elif 'male' in raw_gender:
+                fields['gender'] = 'male'
+            elif 'transgender' in raw_gender:
+                fields['gender'] = 'transgender'
+        else:
+            # Try Hindi
+            if 'महिला' in text:
+                fields['gender'] = 'female'
+            elif 'पुरुष' in text:
+                fields['gender'] = 'male'
     
     elif doc_type == 'income_certificate':
         # Extract income amount

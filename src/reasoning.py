@@ -4,9 +4,11 @@ Simplified reasoning module for ChromaDB-based PolicyPulse.
 Provides semantic search and answer synthesis without requiring Qdrant.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import re
 import logging
+from .policy_urls import get_application_url
+from .drift import compute_drift_timeline, find_max_drift
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 def generate_reasoning_trace(
     query: str,
-    retrieved_results: Dict[str, Any]
+    retrieved_results: Dict[str, Any],
+    context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Generate reasoning trace from ChromaDB query results.
@@ -24,6 +27,7 @@ def generate_reasoning_trace(
     Args:
         query: User's question
         retrieved_results: Results from chromadb_setup.query_documents()
+        context: Optional context from query processing (demographics, etc.)
     
     Returns:
         Dict with reasoning steps and synthesized answer
@@ -77,7 +81,7 @@ def generate_reasoning_trace(
         #Step 3: Synthesize answer
         # NOTE: this was originally calling an LLM but we stripped it out
         # retrieval-only is more deterministic anyway
-        answer = synthesize_answer(query, retrieved_points)
+        answer = synthesize_answer(query, retrieved_points, context)
         trace["final_answer"] = answer
         
         # Step 4: Calculate confidence
@@ -90,6 +94,45 @@ def generate_reasoning_trace(
             "confidence": confidence
         })
         
+        # Step 5: Check for temporal/evolution queries and include drift data
+        query_lower = query.lower()
+        is_change_query = any(kw in query_lower for kw in [
+            "change", "changed", "evolve", "evolved", "evolution", 
+            "different", "difference", "compare", "drift", "over time",
+            "how has", "what happened", "history", "timeline"
+        ])
+        
+        if is_change_query:
+            # Determine policy from retrieved results
+            primary_policy = None
+            if retrieved_points:
+                policy_counts = {}
+                for point in retrieved_points[:3]:
+                    pid = point.get("policy_id", "UNKNOWN")
+                    policy_counts[pid] = policy_counts.get(pid, 0) + 1
+                primary_policy = max(policy_counts, key=policy_counts.get) if policy_counts else None
+            
+            # Also check context for explicit policy
+            if context and context.get("policy_id"):
+                primary_policy = context.get("policy_id")
+                
+            if primary_policy and primary_policy != "UNKNOWN":
+                try:
+                    drift_timeline = compute_drift_timeline(primary_policy)
+                    max_drift = find_max_drift(primary_policy)
+                    
+                    if drift_timeline:
+                        trace["drift_timeline"] = drift_timeline
+                        trace["drift_max"] = max_drift
+                        trace["drift_policy"] = primary_policy
+                        trace["steps"].append({
+                            "step": 4,
+                            "action": f"Computed drift timeline for {primary_policy} ({len(drift_timeline)} year transitions)"
+                        })
+                        logger.info(f"Drift data added for {primary_policy}: {len(drift_timeline)} transitions")
+                except Exception as e:
+                    logger.warning(f"Failed to compute drift for {primary_policy}: {e}")
+        
     except Exception as e:
         logger.error(f"Reasoning trace generation failed: {e}")
         trace["final_answer"] = f"Error processing query: {str(e)}"
@@ -100,7 +143,8 @@ def generate_reasoning_trace(
 
 def synthesize_answer(
     query: str,
-    retrieved_points: List[Dict[str, Any]]
+    retrieved_points: List[Dict[str, Any]],
+    context: Optional[Dict[str, Any]] = None
 ) -> str:
     """
     Synthesize answer from retrieved documents.
@@ -108,10 +152,79 @@ def synthesize_answer(
     Args:
         query: User's question
         retrieved_points: List of retrieved document dicts
+        context: Optional context from query processor
     
     Returns:
         Synthesized answer string
     """
+    # Detect query intent
+    query_lower = query.lower()
+    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"])
+    is_eligibility = any(q in query_lower for q in ["eligible", "eligibility", "who can", "qualify", "am i eligible"])
+    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"])
+    is_budget = any(q in query_lower for q in ["budget", "allocation", "spending", "cost", "expenditure"])
+    is_suggestion = any(q in query_lower for q in ["suggest", "recommend", "for me", "best policy"])
+
+    # 0. Check for Suggestions with Demographics
+    demographics = context.get('demographics', {}) if context else {}
+    
+    # Check if we are satisfying a previous request for occupation
+    chat_history = context.get('chat_history', []) if context else []
+    # Look at the last message from the model
+    last_bot_msg = None
+    for msg in reversed(chat_history):
+        if msg.get('role') == 'model':
+            last_bot_msg = msg
+            break
+            
+    is_answering_prompt = False
+    if last_bot_msg:
+        # Check if the last thing bot said was asking for occupation
+        if "specify your occupation" in last_bot_msg.get('content', '') or "need to know your occupation" in last_bot_msg.get('content', ''):
+            is_answering_prompt = True
+
+    # Trigger eligibility check if:
+    # 1. Explicitly asked ("suggest")
+    # 2. Answering a prompt
+    # 3. Query contains rich demographics (implying "for me")
+    has_rich_demographics = len(demographics) >= 2 or 'occupation' in demographics
+    
+    if (is_suggestion or is_answering_prompt or has_rich_demographics) and demographics:
+        from .eligibility import check_eligibility  # Lazy import to avoid circular dep issues
+        
+        # Check if occupation is missing (skip check for minors)
+        is_minor = demographics.get('age', 18) < 18
+        if 'occupation' not in demographics and not is_minor:
+            return (
+                "To provide the best policy suggestions, I need to know your occupation. "
+                "Are you a **Student**, **Farmer**, **Entrepreneur**, or **Worker**?\n\n"
+                "Please enable me to suggest the most relevant schemes by specifying your occupation."
+            )
+            
+        # Default occupation for minors if missing
+        if is_minor and 'occupation' not in demographics:
+            demographics['occupation'] = 'student'
+            
+        # Run eligibility check
+        eligible_schemes = check_eligibility(demographics)
+        
+        if eligible_schemes:
+            age_str = f"{demographics.get('age')}yr old" if demographics.get('age') else "age unknown"
+            occ_str = demographics.get('occupation') if demographics.get('occupation') else "profile"
+            sections = [f"Based on your profile ({age_str}, {occ_str}), here are the best policies for you:"]
+            
+            for scheme in eligible_schemes[:7]:  # Increased to Top 7
+                sections.append(
+                    f"### **{scheme['policy_name']}**\n"
+                    f"{scheme['description']}\n"
+                    f"**Benefits**: {scheme['benefits']}\n"
+                    f"**Apply Link**: [{scheme['application_link']}]({scheme['application_link']})"
+                )
+            
+            return "\n\n".join(sections)
+        else:
+            return "Based on the provided details, no specific schemes matched perfectly. However, you can explore general schemes like **Digital India** or **RTI** which are open to all."
+
     if not retrieved_points:
         return "No relevant information found. Please try rephrasing your question."
     
@@ -123,21 +236,33 @@ def synthesize_answer(
     
     primary_policy = max(policy_counts, key=policy_counts.get) if policy_counts else None
     
+    # CONTEXT AWARENESS: If no clear policy in current results, check history
+    # This handles queries like "what is the budget?" following a conversation about NREGA
+    chat_history = context.get('chat_history', []) if context else []
+    if not primary_policy or (primary_policy == "UNKNOWN" and chat_history):
+        # Look for policy in last assistant message
+        for msg in chat_history:
+            if not msg.get("is_user", False): # Check bot messages
+                 # Simple heuristic: look for known policy IDs in previous text
+                content = msg.get("content", "").upper()
+                for known_policy in POLICY_DESCRIPTIONS.keys():
+                    if known_policy in content:
+                        primary_policy = known_policy
+                        break
+            if primary_policy: break
+            
     # Filter to only include results from primary policy
-    if primary_policy:
+    if primary_policy and primary_policy != "UNKNOWN":
         filtered_points = [p for p in retrieved_points if p.get("policy_id") == primary_policy]
+        # If filtering removed everything (because retrieval failed to find new context), 
+        # we arguably should return a "I think you're asking about X" message or fallback
+        if not filtered_points and retrieved_points:
+             # Soft fallback: don't filter if it means losing all data, unless confidence is high
+             pass
     else:
         filtered_points = retrieved_points
     
-    # Detect query intent
-    query_lower = query.lower()
-    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"])
-    is_eligibility = any(q in query_lower for q in ["eligible", "eligibility", "who can", "qualify", "am i eligible"])
-    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"])
-    is_budget = any(q in query_lower for q in ["budget", "allocation", "spending", "cost", "expenditure"])
-    
     # Extract year from query if mentioned (e.g., "2011", "in 2020")
-    import re
     year_match = re.search(r'\b(19\d{2}|20\d{2})\b', query)
     query_year = year_match.group(1) if year_match else None
     
@@ -203,8 +328,8 @@ def synthesize_answer(
                     utilization = round((expenditure / allocation) * 100, 1) if allocation > 0 else 0
                     sections.append(
                         f"**{policy} Budget ({year})**:\n"
-                        f"• Allocated: ₹{allocation:,.0f} crore\n"
-                        f"• Spent: ₹{expenditure:,.0f} crore\n"
+                        f"• Allocated: ₹{allocation:,.2f} crore\n"
+                        f"• Spent: ₹{expenditure:,.2f} crore\n"
                         f"• Utilization: {utilization}%"
                     )
                 else:
@@ -226,7 +351,7 @@ def synthesize_answer(
     elif is_how_to:
         if primary_policy:
             sections.append(f"**How to Apply for {primary_policy}**:")
-            sections.append("1. Visit the official portal or your nearest Common Service Centre (CSC)")
+            sections.append(f"1. Visit the official portal: {get_application_url(primary_policy)}")
             sections.append("2. Keep your Aadhaar card and required documents ready")
             sections.append("3. Fill the application form with accurate details")
             sections.append("4. Submit and save your application reference number")

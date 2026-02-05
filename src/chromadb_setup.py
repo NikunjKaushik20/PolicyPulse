@@ -230,7 +230,8 @@ def get_collection_info() -> Dict[str, Any]:
 
 def get_all_documents(
     where: Optional[Dict[str, Any]] = None,
-    limit: Optional[int] = None
+    limit: Optional[int] = None,
+    include_embeddings: bool = False
 ) -> Dict[str, Any]:
     """
     Retrieve all documents (or filtered subset).
@@ -238,22 +239,29 @@ def get_all_documents(
     Args:
         where: Filter conditions
         limit: Max number of documents
+        include_embeddings: If True, include embeddings in result (needed for drift analysis)
     
     Returns:
-        Dict with ids, documents, metadatas
+        Dict with ids, documents, metadatas, and optionally embeddings
     """
     collection = get_collection()
+    
+    # Build include list
+    include_list = ["documents", "metadatas"]
+    if include_embeddings:
+        include_list.append("embeddings")
     
     try:
         if where:
             # Query with filter
             results = collection.get(
                 where=where,
-                limit=limit
+                limit=limit,
+                include=include_list
             )
         else:
             # Get all
-            results = collection.get(limit=limit)
+            results = collection.get(limit=limit, include=include_list)
         
         return results
     except Exception as e:

@@ -1,12 +1,12 @@
-year,subscribers_lakh,aum_crore,women_percent,rural_percent,focus_area
-2015,10,100,35,40,APY launch May 9
-2016,40,600,38,42,Bank branch enrollment
-2017,85,2500,40,45,SHG mobilization
-2018,130,6000,42,48,1 crore subscribers
-2019,179,10500,44,50,Digital enrollment
-2020,220,15000,45,52,Jan Dhan linkage
-2021,280,22000,46,53,PMJJBY integration
-2022,350,30000,47,54,3.5 crore subscribers
-2023,450,40000,48,55,Pension Mitra program
-2024,550,52000,49,56,5.5 crore subscribers
-2025,650,65000,50,57,Pension coverage expansion
+year,allocated_crores,spent_crores,subscribers_lakh,aum_crore,women_percent,rural_percent,focus_area
+2015,200,180,10,100,35,40,APY launch May 9
+2016,350,312,40,600,38,42,Bank branch enrollment
+2017,500,450,85,2500,40,45,SHG mobilization
+2018,650,580,130,3818,42,48,1 crore subscribers
+2019,800,720,179,6860,44,50,Digital enrollment
+2020,250,220,220,10526,45,52,Co-contribution ended
+2021,300,270,280,15687,46,53,PMJJBY integration
+2022,350,320,350,20923,47,54,3.5 crore subscribers
+2023,400,370,450,28000,48,55,Pension Mitra program
+2024,450,420,550,35000,49,56,5.5 crore subscribers
+2025,500,460,650,42000,50,57,Pension coverage expansion

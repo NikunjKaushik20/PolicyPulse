@@ -11,7 +11,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/6] Installing Python dependencies...
+echo [1/6] Setting up Virtual Environment...
+if not exist venv (
+    echo Creating virtual environment...
+    python -m venv venv
+)
+
+echo Activating virtual environment...
+call venv\Scripts\activate.bat
+
+echo [2/6] Installing Python dependencies...
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 if errorlevel 1 (
     echo ERROR: Failed to install dependencies
@@ -51,11 +61,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [5/6] Running data migration ^(if Qdrant data exists^)...
-python migrate_to_chromadb.py
-
-echo.
-echo [6/6] Ingesting policy data...
+echo [5/5] Ingesting policy data...
 python cli.py ingest-all
 if errorlevel 1 (
     echo WARNING: Data ingestion had some issues. Check logs.
