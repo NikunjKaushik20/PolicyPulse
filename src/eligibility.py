@@ -199,6 +199,37 @@ ELIGIBILITY_RULES = {
         ],
         "application_link": "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=69",
         "benefits": "High interest rate savings for girl child's future education/marriage"
+    },
+
+    "PMMVY": {
+        "name": "Pradhan Mantri Matru Vandana Yojana",
+        "description": "Financial assistance for pregnant women and lactating mothers",
+        "rules": {
+            "gender": ["female"],
+            "age_min": 19,
+            "location_type": ["rural", "urban"]
+        },
+        "documents_required": [
+            "Aadhar card",
+            "Mother and Child Protection (MCP) Card"
+        ],
+        "application_link": "https://wcd.nic.in/schemes/pradhan-mantri-matru-vandana-yojana",
+        "benefits": "₹5,000 cash incentive in three installments"
+    },
+
+    "MAHILA-SAMMAN": {
+        "name": "Mahila Samman Savings Certificate",
+        "description": "Small savings scheme for women and girls",
+        "rules": {
+            "gender": ["female"],
+            "location_type": ["rural", "urban"]
+        },
+        "documents_required": [
+            "Aadhar card",
+            "PAN card"
+        ],
+        "application_link": "https://www.indiapost.gov.in/",
+        "benefits": "7.5% interest rate, compounded quarterly"
     }
 }
 

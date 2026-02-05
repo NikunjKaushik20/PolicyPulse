@@ -175,22 +175,56 @@ Apply Link: https://rtionline.gov.in/
 **Swachh Bharat Mission**
 Toilet construction subsidy.
 Benefits: ₹12,000 subsidy for toilet construction
-Apply Link: https://swachhbharatmission.gov.in/
+Apply Link: https://pmjay.gov.in/
 
-**Digital India Initiative**
-Digital literacy and services.
-Benefits: Free digital literacy training, online government services
-Apply Link: https://www.digitalindia.gov.in/
+---
 
-**Skill India Mission**
-Free vocational training.
-Benefits: Free vocational training, certification, placement assistance
-Apply Link: https://www.skillindia.gov.in/
+## Example 4: Rural Woman Eligibility (Inclusion Check)
+
+**Input:**
+```
+"schemes for 25 year old rural woman"
+```
+
+**Processing steps:**
+
+1. **Demographics extraction**:
+   ```python
+   demographics = {
+       "age": 25,
+       "gender": "female",  # Extracted explicitly
+       "location_type": "rural"
+   }
+   ```
+
+2. **Eligibility check & Gender Logic**:
+   - **PMMVY**: Matched (Female + Age > 19)
+   - **Mahila Samman**: Matched (Female only)
+   - **NREGA**: Matched (Rural + Age > 18)
+
+3. **Output:**
+```
+Based on your profile (25yr old, female, rural), here are the best policies for you:
+
+**Pradhan Mantri Matru Vandana Yojana (PMMVY)**
+Financial assistance for pregnant women and lactating mothers.
+Benefits: ₹5,000 cash incentive in three installments
+Apply Link: https://wcd.nic.in/schemes/pradhan-mantri-matru-vandana-yojana
+
+**Mahila Samman Savings Certificate**
+Small savings scheme for women and girls.
+Benefits: 7.5% interest rate, compounded quarterly
+Apply Link: https://www.indiapost.gov.in/
+
+**Mahatma Gandhi National Rural Employment Guarantee Act (NREGA)**
+100 days of guaranteed wage employment.
+Benefits: ₹209-318 per day wage, 100 days guaranteed employment per year
+Apply Link: https://nrega.nic.in/
 ```
 
 ---
 
-## Example 4: Hindi Query with Translation
+## Example 5: Hindi Query with Translation
 
 **Input:**
 ```
@@ -248,7 +282,7 @@ Apply Link: https://www.skillindia.gov.in/
 
 ---
 
-## Example 5: Document Upload (OCR)
+## Example 6: Document Upload (OCR)
 
 **Input:** Image of Aadhaar card
 
@@ -314,7 +348,7 @@ Apply Link: https://www.skillindia.gov.in/
 
 ---
 
-## Example 6: Policy Drift Query
+## Example 7: Policy Drift Query
 
 **Input:**
 ```
@@ -366,7 +400,7 @@ This represents one of the largest year-over-year changes in NREGA history, driv
 
 ---
 
-## Example 7: Edge Case - No Results
+## Example 8: Edge Case - No Results
 
 **Input:**
 ```
@@ -403,7 +437,7 @@ This represents one of the largest year-over-year changes in NREGA history, driv
 
 ---
 
-## Example 8: Multi-Policy Query (Known Limitation)
+## Example 9: Multi-Policy Query (Known Limitation)
 
 **Input:**
 ```

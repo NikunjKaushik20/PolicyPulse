@@ -7,6 +7,7 @@ Switched from googletrans after it broke in Jan 2024 (httpx version conflict).
 
 import os
 import logging
+import re
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -67,9 +68,32 @@ def translate_text(text: str, target_lang: str = 'hi', source_lang: str = 'en') 
         return text
     
     try:
+        # Protect URLs from translation
+        # Replace URLs with placeholders like ||URL1||
+        urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+        placeholders = {}
+        text_to_translate = text
+        
+        for i, url in enumerate(urls):
+            ph = f"__URL{i}__"
+            placeholders[ph] = url
+            text_to_translate = text_to_translate.replace(url, ph)
+            
         # Use deep-translator
-        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(text)
-        return translated if translated else text
+        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(text_to_translate)
+        
+        # Restore URLs
+        if translated:
+            for ph, url in placeholders.items():
+                translated = translated.replace(ph, url)
+                # Fallback: check for spaces or modified case (though __URL0__ is usually safe)
+                # e.g. __ URL 0 __
+                if ph not in translated:
+                    # Try loose match if exact match fails
+                    pass # TODO: Add more robust fallback if needed, but __URL0__ tested safe
+            return translated
+        else:
+            return text
             
     except Exception as e:
         logger.error(f"Translation failed: {e}")

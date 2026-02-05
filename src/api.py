@@ -140,6 +140,7 @@ class TTSRequest(BaseModel):
 
 class EligibilityProfile(BaseModel):
     age: int
+    gender: str = ''
     income: int = 0
     occupation: str = ''
     location_type: str = 'urban'

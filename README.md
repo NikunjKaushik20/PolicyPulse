@@ -129,12 +129,12 @@ Computes semantic distance between consecutive years to quantify policy change. 
 - PM-KISAN 2019 launch (drift: 0.92) = New scheme inception ✅
 
 ### 3. Eligibility Checker
-Rule-based matching. We hardcoded eligibility criteria for all schemes (age, income, location, occupation, etc.). User fills out profile, system returns ranked list of applicable schemes with required documents.
+Rule-based matching. We hardcoded eligibility criteria for all schemes, **including gender-specific rules** for women-centric policies. User fills out profile, system returns ranked list of applicable schemes with required documents.
 
 **Why rules, not ML:** Government eligibility is explicitly documented. No training data exists. Rules are auditable and legally defensible.
 
 ### 4. Multilingual Interface
-Detects input language via `langdetect`, translates to English for embedding search, translates output back via `deep-translator`. TTS via gTTS for audio output.
+Detects input language via `langdetect` **(optimized for Hinglish/Code-Switching)**, translates to English for embedding search, translates output back via `deep-translator`. TTS via gTTS for audio output.
 
 ### 5. Multimodal Input
 - **Text**: Direct query
@@ -189,7 +189,7 @@ Evaluated against 64-query test set across 130+ policies:
 2. Ground truth created by us, not independently validated by domain experts
 3. No formal user studies with target population (based on field observations)
 4. All tests run locally; no production load testing
-5. Gender-based eligibility not implemented—affects women-specific schemes
+5. SMS/USSD interface not implemented (future work)
 
 ---
 

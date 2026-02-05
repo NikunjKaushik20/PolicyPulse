@@ -68,6 +68,13 @@ def detect_language(text: str) -> Tuple[str, float]:
         # Fallback: check for Devanagari script (Hindi/Marathi)
         return _script_based_detection(text)
     
+    # Check for Hinglish (Romanized Hindi) BEFORE standard detection
+    # standard langdetect often confuses Hinglish with Somali/Tagalog/English
+    is_hinglish, conf = _check_hinglish(text)
+    if is_hinglish:
+        logger.info(f"Hinglish detected: {conf:.2f}")
+        return 'hi', conf
+
     try:
         # Get all detected languages with probabilities
         detected = detect_langs(text)
@@ -157,6 +164,44 @@ def _script_based_detection(text: str) -> Tuple[str, float]:
     
     logger.info(f"Script-based detection: {detected_lang} ({confidence:.2f})")
     return detected_lang, confidence
+
+
+def _check_hinglish(text: str) -> Tuple[bool, float]:
+    """
+    Heuristic to detect Hinglish (Romanized Hindi).
+    Looks for common stopwords that don't overlap much with English.
+    """
+    text_lower = text.lower()
+    words = set(text_lower.split())
+    
+    # Common Hinglish stopwords
+    hinglish_markers = {
+        'kya', 'kaise', 'kab', 'kahan', 'kyun', 'kisko',  # Questions
+        'hai', 'hain', 'tha', 'the', 'thi',               # Verbs
+        'main', 'hum', 'tum', 'aap',                      # Pronouns
+        'mera', 'tumhara', 'apka', 'uska',                # Possessive
+        'ke', 'liye', 'ko', 'aur', 'ka', 'ki', 'se', 'me', 'mein', # Prepositions/Conjunctions
+        'nahi', 'haan', 'matlab', 'wala', 'wali'          # Common
+    }
+    
+    # Count matches
+    matches = 0
+    for marker in hinglish_markers:
+        if marker in words:
+            matches += 1
+            
+    # Heuristic: If we find 2 or more distinct Hinglish markers, it's likely Hinglish
+    # especially since 'me', 'to', 'is' are English too, but 'kya', 'kaise' are distinct.
+    
+    # Refined check: prioritized markers that are NOT English words
+    strong_markers = {'kya', 'kaise', 'kab', 'kyun', 'hai', 'hain', 'liye', 'aur', 'nahi'}
+    strong_matches = sum(1 for m in strong_markers if m in words)
+    
+    if strong_matches >= 1 or matches >= 3:
+        # Calculate naive confidence
+        return True, 0.95
+        
+    return False, 0.0
 
 
 def get_language_name(lang_code: str) -> str:
