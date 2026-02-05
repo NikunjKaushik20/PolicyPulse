@@ -61,7 +61,10 @@ def generate_reasoning_trace(
                 "modality": meta.get("modality", "text"),
                 "year": meta.get("year", ""),
                 "distance": round(dist, 4),
-                "score": round(1 - dist, 4)  # Convert distance to similarity
+                "score": round(1 - dist, 4),  # Convert distance to similarity
+                # Budget metadata
+                "allocation_crores": meta.get("allocation_crores", 0),
+                "expenditure_crores": meta.get("expenditure_crores", 0)
             })
         
         trace["retrieved_points"] = retrieved_points
@@ -126,6 +129,32 @@ def synthesize_answer(
     else:
         filtered_points = retrieved_points
     
+    # Detect query intent
+    query_lower = query.lower()
+    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"])
+    is_eligibility = any(q in query_lower for q in ["eligible", "eligibility", "who can", "qualify", "am i eligible"])
+    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"])
+    is_budget = any(q in query_lower for q in ["budget", "allocation", "spending", "cost", "expenditure"])
+    
+    # Extract year from query if mentioned (e.g., "2011", "in 2020")
+    import re
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', query)
+    query_year = year_match.group(1) if year_match else None
+    
+    # Policy descriptions for "what is" queries
+    POLICY_DESCRIPTIONS = {
+        "NREGA": "The Mahatma Gandhi National Rural Employment Guarantee Act (MGNREGA) is a social security scheme that guarantees 100 days of wage employment per year to rural households willing to do unskilled manual work.",
+        "RTI": "The Right to Information Act (RTI) is a law that empowers Indian citizens to request information from public authorities, promoting transparency and accountability in government.",
+        "PM-KISAN": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) is a government scheme providing income support of ₹6,000 per year to farmer families in three equal installments.",
+        "AYUSHMAN-BHARAT": "Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the world's largest health insurance scheme, providing ₹5 lakh coverage per family per year for hospitalization.",
+        "SWACHH-BHARAT": "Swachh Bharat Mission is a nationwide cleanliness campaign providing subsidies for toilet construction and promoting sanitation and hygiene.",
+        "DIGITAL-INDIA": "Digital India is a flagship programme to transform India into a digitally empowered society with focus on digital infrastructure, governance, and literacy.",
+        "SKILL-INDIA": "Skill India Mission aims to train over 40 crore Indians in various skills through vocational training, certification, and placement assistance.",
+        "SMART-CITIES": "Smart Cities Mission aims to promote sustainable and inclusive urban development through technology-driven solutions.",
+        "NEP": "The National Education Policy (NEP) 2020 is a comprehensive framework for transforming education in India with focus on holistic development and skill building.",
+        "MAKE-IN-INDIA": "Make in India is an initiative to encourage companies to manufacture products in India, boosting employment and economic growth."
+    }
+    
     # Group by modality
     by_modality = {}
     for point in filtered_points:
@@ -137,34 +166,98 @@ def synthesize_answer(
     # Build answer sections
     sections = []
     
-    # Add temporal/text info
-    temporal = by_modality.get("temporal") or by_modality.get("text", [])
-    if temporal:
-        top = temporal[0]
-        sections.append(
-            f"{top['policy_id']} ({top.get('year', 'N/A')}): {top['content_preview']}"
-        )
+    # For "what is" queries, start with policy description
+    if is_what_is and primary_policy:
+        if primary_policy in POLICY_DESCRIPTIONS:
+            sections.append(f"**{primary_policy}**: {POLICY_DESCRIPTIONS[primary_policy]}")
+        
+        # Add key details from retrieved content
+        if filtered_points:
+            top = filtered_points[0]
+            content = top['content_preview'][:300] if top.get('content_preview') else ""
+            if content and len(content) > 50:
+                sections.append(f"**Key Details**: {content}")
     
-    # Add budget info (only from same policy)
-    budget = by_modality.get("budget", [])
-    if budget:
-        top = budget[0]
-        sections.append(
-            f"Budget ({top.get('year', 'N/A')}): {top['content_preview']}"
-        )
+    # For budget queries, prioritize budget modality with actual amounts
+    elif is_budget:
+        budget = by_modality.get("budget", [])
+        if budget:
+            # Filter by year if specified in query
+            if query_year:
+                budget = [b for b in budget if str(b.get('year', '')) == query_year]
+            
+            # Deduplicate by year (multiple text variants exist for same year)
+            seen_years = set()
+            for b in budget:
+                year = b.get('year', 'N/A')
+                if year in seen_years:
+                    continue
+                seen_years.add(year)
+                
+                allocation = b.get('allocation_crores', 0)
+                expenditure = b.get('expenditure_crores', 0)
+                policy = b.get('policy_id', 'Unknown')
+                
+                # Build response with actual numbers
+                if allocation > 0:
+                    utilization = round((expenditure / allocation) * 100, 1) if allocation > 0 else 0
+                    sections.append(
+                        f"**{policy} Budget ({year})**:\n"
+                        f"• Allocated: ₹{allocation:,.0f} crore\n"
+                        f"• Spent: ₹{expenditure:,.0f} crore\n"
+                        f"• Utilization: {utilization}%"
+                    )
+                else:
+                    # Fallback to content preview
+                    content = b['content_preview'][:400] if b.get('content_preview') else ""
+                    sections.append(f"**Budget ({year})**: {content}")
+        else:
+            # Fallback to general content
+            for p in filtered_points[:2]:
+                sections.append(f"{p['content_preview'][:400]}")
     
-    # Add news info (only from same policy)
-    news = by_modality.get("news", [])
-    if news:
-        top = news[0]
-        sections.append(
-            f"News ({top.get('year', 'N/A')}): {top['content_preview']}"
-        )
+    # For eligibility queries
+    elif is_eligibility:
+        if primary_policy in POLICY_DESCRIPTIONS:
+            sections.append(f"**About {primary_policy}**: {POLICY_DESCRIPTIONS[primary_policy]}")
+        sections.append("**Eligibility**: Based on your profile, you may be eligible. Use the eligibility checker or upload your Aadhaar for personalized results.")
+    
+    # For how-to queries
+    elif is_how_to:
+        if primary_policy:
+            sections.append(f"**How to Apply for {primary_policy}**:")
+            sections.append("1. Visit the official portal or your nearest Common Service Centre (CSC)")
+            sections.append("2. Keep your Aadhaar card and required documents ready")
+            sections.append("3. Fill the application form with accurate details")
+            sections.append("4. Submit and save your application reference number")
+    
+    # Default: show relevant content with context
+    else:
+        # Add temporal/text info
+        temporal = by_modality.get("temporal") or by_modality.get("text", [])
+        if temporal:
+            top = temporal[0]
+            content = top['content_preview'][:400] if top.get('content_preview') else ""
+            sections.append(f"**{top['policy_id']} ({top.get('year', 'N/A')})**: {content}")
+        
+        # Add budget info
+        budget = by_modality.get("budget", [])
+        if budget:
+            top = budget[0]
+            content = top['content_preview'][:300] if top.get('content_preview') else ""
+            sections.append(f"**Budget ({top.get('year', 'N/A')})**: {content}")
+        
+        # Add news info
+        news = by_modality.get("news", [])
+        if news:
+            top = news[0]
+            content = top['content_preview'][:300] if top.get('content_preview') else ""
+            sections.append(f"**Latest Updates ({top.get('year', 'N/A')})**: {content}")
     
     # If no specific modalities, use top result
     if not sections and filtered_points:
         top = filtered_points[0]
-        sections.append(f"{top['content_preview']}")
+        sections.append(f"{top['content_preview'][:500]}")
     
     return "\n\n".join(sections) if sections else "No detailed information available."
 

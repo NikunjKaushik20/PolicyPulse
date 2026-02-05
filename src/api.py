@@ -393,6 +393,102 @@ async def text_to_speech_endpoint(request: Request, tts_req: TTSRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/process-audio")
+@limiter.limit("10/minute")
+async def process_audio_endpoint(request: Request, file: UploadFile = File(...)):
+    """
+    Process audio file and transcribe to text using SpeechRecognition.
+    
+    Accepts audio files (webm, wav, mp3) and returns transcription.
+    """
+    try:
+        import speech_recognition as sr
+        import tempfile
+        import os
+        
+        # Save uploaded file temporarily
+        content = await file.read()
+        suffix = ".webm" if "webm" in file.filename else ".wav"
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        try:
+            # Convert to WAV if needed (webm needs conversion)
+            if suffix == ".webm":
+                try:
+                    import av
+                    wav_path = tmp_path + ".wav"
+                    
+                    container = av.open(tmp_path)
+                    audio_stream = container.streams.audio[0]
+                    
+                    output = av.open(wav_path, 'w')
+                    output_stream = output.add_stream('pcm_s16le', rate=16000)
+                    
+                    for frame in container.decode(audio_stream):
+                        for packet in output_stream.encode(frame):
+                            output.mux(packet)
+                    
+                    for packet in output_stream.encode():
+                        output.mux(packet)
+                    
+                    output.close()
+                    container.close()
+                    
+                    audio_path = wav_path
+                except Exception as conv_err:
+                    logger.warning(f"Audio conversion failed: {conv_err}, trying direct recognition")
+                    audio_path = tmp_path
+            else:
+                audio_path = tmp_path
+            
+            # Recognize speech
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(audio_path) as source:
+                audio = recognizer.record(source)
+            
+            # Try Google Speech Recognition
+            try:
+                transcription = recognizer.recognize_google(audio, language="hi-IN")
+            except sr.UnknownValueError:
+                # Try English if Hindi fails
+                try:
+                    transcription = recognizer.recognize_google(audio, language="en-IN")
+                except:
+                    transcription = ""
+            
+            # Clean up temp files
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            if suffix == ".webm" and os.path.exists(audio_path) and audio_path != tmp_path:
+                os.unlink(audio_path)
+            
+            if transcription:
+                return {"transcription": transcription, "success": True}
+            else:
+                return {"transcription": "", "success": False, "error": "Could not understand audio"}
+                
+        except Exception as e:
+            logger.error(f"Speech recognition failed: {e}")
+            # Clean up
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            return {"transcription": "", "success": False, "error": str(e)}
+            
+    except ImportError:
+        logger.warning("speech_recognition not installed, returning mock response")
+        return {
+            "transcription": "Voice input not available - SpeechRecognition not installed",
+            "success": False,
+            "error": "speech_recognition library not installed"
+        }
+    except Exception as e:
+        logger.error(f"Audio processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/eligibility/check")
 @limiter.limit("30/minute")
 async def check_user_eligibility(request: Request, profile: EligibilityProfile):
