@@ -63,7 +63,7 @@ fi
 
 echo
 echo "========================================"
-echo "Setup Complete! (No Docker needed) ✅"
+echo "Setup Complete!✅"
 echo "========================================"
 echo
 echo "Next steps:"
