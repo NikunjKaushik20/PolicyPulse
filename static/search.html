@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Policy Search - PolicyPulse</title>
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">
+        <span>🔍</span>
+        <span>PolicyPulse</span>
+      </div>
+      <nav class="nav">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/search.html" class="nav-link active">Search</a>
+        <a href="/eligibility.html" class="nav-link">Eligibility</a>
+        <a href="/voice.html" class="nav-link">Voice</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding: 2rem 1.5rem; max-width: 900px;">
+    <div class="fade-in">
+      <h1 class="text-center mb-3">🔍 Search Policies</h1>
+      <p class="text-center mb-4" style="color: var(--text-secondary);">
+        Ask questions about government schemes, budgets, and policy evolution
+      </p>
+
+      <!-- Search Form -->
+      <div class="card mb-4">
+        <div class="input-group">
+          <label class="input-label">Your Question</label>
+          <textarea 
+            id="query-input" 
+            class="textarea" 
+            placeholder="Example: What is NREGA about? How much budget was allocated for PM-KISAN in 2023?"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-2 mb-3">
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">Language</label>
+            <select id="language-select" class="select">
+              <option value="en">English</option>
+              <option value="hi">Hindi (हिंदी)</option>
+              <option value="ta">Tamil (தமிழ்)</option>
+              <option value="te">Telugu (తెలుగు)</option>
+              <option value="bn">Bengali (বাংলা)</option>
+              <option value="mr">Marathi (मराठी)</option>
+            </select>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">Results</label>
+            <select id="results-count" class="select">
+              <option value="3">Top 3</option>
+              <option value="5" selected>Top 5</option>
+              <option value="10">Top 10</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="search-btn" class="btn btn-primary" style="flex: 1;">
+            🔍 Search
+          </button>
+          <button id="listen-btn" class="btn btn-secondary" style="flex: 1;">
+            🎤 Voice Output
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results-container"></div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/static/js/theme-toggle.js"></script>
+  <script src="/static/js/api-client.js"></script>
+  <script>
+    const queryInput = document.getElementById('query-input');
+    const searchBtn = document.getElementById('search-btn');
+    const listenBtn = document.getElementById('listen-btn');
+    const resultsContainer = document.getElementById('results-container');
+    const languageSelect = document.getElementById('language-select');
+    const resultsCount = document.getElementById('results-count');
+    
+    let lastAnswer = '';
+
+    // Search function
+    async function performSearch() {
+      const query = queryInput.value.trim();
+      
+      if (!query) {
+        alert('Please enter a question');
+        return;
+      }
+
+      // Show loading
+      resultsContainer.innerHTML = '<div class="flex-center" style="padding: 3rem;"><div class="spinner"></div></div>';
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '⏳ Searching...';
+
+      try {
+        const language = languageSelect.value;
+        const topK = parseInt(resultsCount.value);
+        
+        const response = await apiClient.queryPolicy(query, language);
+        lastAnswer = response.final_answer;
+        
+        // Display results
+        displayResults(response);
+        
+      } catch (error) {
+        resultsContainer.innerHTML = `
+          <div class="card" style="background: var(--error); color: white;">
+            <h4>❌ Search Failed</h4>
+            <p>${error.message}</p>
+            <p><small>Make sure the API server is running</small></p>
+          </div>
+        `;
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '🔍 Search';
+      }
+    }
+
+    // Display results
+    function displayResults(data) {
+      let html = '';
+      
+      // Confidence label with color
+      const confidenceLabel = data.confidence_label || 'Medium';
+      const confidenceColors = {
+        'High': 'background: linear-gradient(135deg, #10b981, #059669); color: white;',
+        'Medium': 'background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;',
+        'Low': 'background: linear-gradient(135deg, #f59e0b, #d97706); color: white;'
+      };
+      const confidenceEmoji = {
+        'High': '✅',
+        'Medium': '👍',
+        'Low': '⚠️'
+      };
+      
+      // Main answer card
+      html += `
+        <div class="card card-gradient mb-3 fade-in">
+          <h3>💡 Answer</h3>
+          <p style="font-size: 1.125rem; line-height: 1.8; color: white;">
+            ${data.final_answer}
+          </p>
+          <div class="flex gap-2 mt-3">
+            <span class="badge" style="${confidenceColors[confidenceLabel]}">
+              ${confidenceEmoji[confidenceLabel]} Confidence: ${confidenceLabel}
+            </span>
+            <span class="badge" style="background: rgba(255,255,255,0.3);">
+              ${data.retrieved_points?.length || 0} sources
+            </span>
+          </div>
+        </div>
+      `;
+
+      // Retrieved documents
+      if (data.retrieved_points && data.retrieved_points.length > 0) {
+        html += '<h3 class="mb-2">📚 Source Documents</h3>';
+        
+        data.retrieved_points.forEach((point, index) => {
+          const modality = point.modality || 'temporal';
+          const emoji = modality === 'budget' ? '💰' : modality === 'news' ? '📰' : '📄';
+          
+          html += `
+            <div class="card mb-2 fade-in">
+              <div class="flex gap-2 mb-2">
+                <span class="badge badge-primary">${emoji} ${modality}</span>
+                <span class="badge badge-success">${point.policy_id || 'N/A'}</span>
+                <span class="badge">${point.year || 'N/A'}</span>
+              </div>
+              <p style="color: var(--text-secondary);">${point.content_preview}</p>
+            </div>
+          `;
+        });
+      }
+
+      resultsContainer.innerHTML = html;
+    }
+
+    // Voice playback
+    async function playVoiceAnswer() {
+      if (!lastAnswer) {
+        alert('Search for something first!');
+        return;
+      }
+
+      listenBtn.disabled = true;
+      listenBtn.innerHTML = '🔊 Playing...';
+
+      try {
+        const language = languageSelect.value;
+        const audioBlob = await apiClient.getTextToSpeech(lastAnswer, language);
+        apiClient.playAudio(audioBlob);
+      } catch (error) {
+        alert('Voice output failed: ' + error.message);
+      } finally {
+        listenBtn.disabled = false;
+        listenBtn.innerHTML = '🎤 Voice Output';
+      }
+    }
+
+    // Event listeners
+    searchBtn.addEventListener('click', performSearch);
+    listenBtn.addEventListener('click', playVoiceAnswer);
+    
+    queryInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        performSearch();
+      }
+    });
+  </script>
+</body>
+</html>

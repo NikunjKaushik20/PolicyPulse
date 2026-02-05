@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Checker - PolicyPulse</title>
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .upload-zone {
+      border: 3px dashed var(--border);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--card);
+    }
+    
+    .upload-zone:hover {
+      border-color: var(--primary);
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+    
+    .upload-zone.dragging {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    
+    .upload-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.7;
+    }
+    
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .field-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .field-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 12px;
+      margin: 1rem 0;
+    }
+    
+    .requirement-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      background: var(--bg-secondary);
+    }
+    
+    .requirement-item.complete {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .requirement-item.incomplete {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">
+        <span>📸</span>
+        <span>PolicyPulse</span>
+      </div>
+      <nav class="nav">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/search.html" class="nav-link">Search</a>
+        <a href="/eligibility.html" class="nav-link">Eligibility</a>
+        <a href="/documents.html" class="nav-link active">Documents</a>
+        <a href="/voice.html" class="nav-link">Voice</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding: 2rem 1.5rem; max-width: 900px;">
+    <div class="fade-in">
+      <h1 class="text-center mb-3">📸 AI Document Checker</h1>
+      <p class="text-center mb-4" style="color: var(--text-secondary);">
+        Upload any government document — we'll extract info, validate it, and check scheme requirements
+      </p>
+
+      <!-- Upload Card -->
+      <div class="card mb-4">
+        <div id="upload-zone" class="upload-zone">
+          <div class="upload-icon">📤</div>
+          <h3>Drag & Drop or Click to Upload</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Supported: Aadhaar, Income Certificate, Land Records, Ration Card
+          </p>
+          <p style="color: var(--text-secondary); font-size: 0.875rem;">
+            Max size: 10MB • Formats: JPG, PNG
+          </p>
+          <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results-container"></div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/static/js/theme-toggle.js"></script>
+  <script src="/static/js/api-client.js"></script>
+  <script>
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const resultsContainer = document.getElementById('results-container');
+
+    // Click to upload
+    uploadZone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragging');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragging');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragging');
+      
+      if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Handle file upload
+    async function handleFile(file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file (JPG, PNG)');
+        return;
+      }
+
+      // Validate file size
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Maximum size is 10MB');
+        return;
+      }
+
+      // Show loading
+      resultsContainer.innerHTML = `
+        <div class="card">
+          <div class="flex-center" style="padding: 3rem;">
+            <div class="spinner"></div>
+          </div>
+          <p class="text-center" style="margin-top: 1rem;">Processing document...</p>
+        </div>
+      `;
+
+      try {
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Upload to API
+        const response = await fetch('/document/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Processing failed');
+        }
+
+        // Display results
+        displayResults(result, file);
+
+      } catch (error) {
+        resultsContainer.innerHTML = `
+          <div class="card" style="background: var(--error); color: white;">
+            <h4>❌ Upload Failed</h4>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Display processing results
+    async function displayResults(data, file) {
+      const docType = data.document_type || 'unknown';
+      const fields = data.extracted_fields || {};
+      const validation = data.validation || {};
+      
+      // Document type emoji
+      const typeEmoji = {
+        'aadhaar': '🆔',
+        'income_certificate': '💰',
+        'land_record': '🏞️',
+        'ration_card': '🍚'
+      };
+
+      let html = `
+        <div class="card mb-3 fade-in">
+          <h3>${typeEmoji[docType] || '📄'} ${docType.replace('_', ' ').toUpperCase()}</h3>
+          
+          <!-- Validation Status -->
+          <div class="mb-3">
+            ${validation.valid 
+              ? '<div class="badge badge-success" style="font-size: 1rem; padding: 0.75rem 1.5rem;">✅ Valid Document</div>'
+              : '<div class="badge badge-error" style="font-size: 1rem; padding: 0.75rem 1.5rem;">❌ Invalid or Incomplete</div>'
+            }
+            <span class="badge" style="margin-left: 0.5rem; font-size: 1rem; padding: 0.75rem 1.5rem;">
+              ${validation.completeness}% Complete
+            </span>
+          </div>
+
+          <!-- Image Preview -->
+          <img src="${URL.createObjectURL(file)}" alt="Document" class="image-preview">
+
+          <!-- Extracted Fields -->
+          <h4 class="mb-2">📋 Extracted Information</h4>
+      `;
+
+      // Display extracted fields
+      if (Object.keys(fields).length > 0) {
+        for (const [key, value] of Object.entries(fields)) {
+          const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          html += `
+            <div class="field-row">
+              <span class="field-label">${label}:</span>
+              <span class="field-value">${value}</span>
+            </div>
+          `;
+        }
+      } else {
+        html += '<p style="color: var(--text-secondary);">No fields could be extracted. Try uploading a clearer image.</p>';
+      }
+
+      // Show validation issues if any
+      if (validation.issues && validation.issues.length > 0) {
+        html += '<h4 class="mt-3 mb-2">⚠️ Issues Found</h4>';
+        validation.issues.forEach(issue => {
+          html += `<p style="color: var(--error);">• ${issue}</p>`;
+        });
+      }
+
+      html += '</div>';
+
+      resultsContainer.innerHTML = html;
+
+      // Check eligibility based on extracted data
+      if (fields.age || fields.locality) {
+        await checkEligibility(fields);
+      }
+    }
+
+    // Check eligibility based on document data
+    async function checkEligibility(fields) {
+      const eligibilityCard = `
+        <div class="card fade-in" id="eligibility-card">
+          <h4 class="mb-2">🎯 Eligible Schemes</h4>
+          <div class="flex-center" style="padding: 2rem;">
+            <div class="spinner"></div>
+          </div>
+          <p class="text-center">Checking your eligibility...</p>
+        </div>
+      `;
+      resultsContainer.innerHTML += eligibilityCard;
+
+      try {
+        // Build eligibility profile from extracted data
+        const profile = {
+          age: fields.age || 25,
+          income: 0,
+          occupation: '',
+          location_type: fields.locality || 'urban',
+          category: 'general',
+          land_ownership: false,
+          has_toilet: true,
+          willingness_manual_work: false,
+          in_smart_city: fields.locality === 'urban'
+        };
+
+        // Call eligibility API
+        const response = await fetch('/eligibility/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile)
+        });
+
+        if (!response.ok) {
+          throw new Error('Eligibility check failed');
+        }
+
+        const schemes = await response.json();
+
+        // Display eligible schemes
+        let schemesHtml = '<div class="card fade-in"><h4 class="mb-2">🎯 Eligible Schemes</h4>';
+        
+        if (schemes.length === 0) {
+          schemesHtml += '<p style="color: var(--text-secondary);">No schemes found for your profile. Try checking eligibility with income details.</p>';
+        } else {
+          schemesHtml += `<p style="color: var(--text-secondary); margin-bottom: 1rem;">Based on Age: ${fields.age || 'N/A'}, Locality: ${fields.locality || 'N/A'}</p>`;
+          
+          schemes.forEach(scheme => {
+            schemesHtml += `
+              <div class="requirement-item complete">
+                <div style="flex: 1;">
+                  <strong>${scheme.policy_id}</strong>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: var(--text-secondary);">
+                    ${scheme.description || 'Government welfare scheme'}
+                  </p>
+                </div>
+                <button onclick="showApplicationSteps('${scheme.policy_id}')" class="btn btn-primary" style="padding: 0.5rem 1.5rem;">
+                  Apply →
+                </button>
+              </div>
+            `;
+          });
+        }
+        
+        schemesHtml += '</div>';
+        
+        // Add steps modal container
+        schemesHtml += '<div id="steps-container"></div>';
+
+        // Replace loading card with results
+        document.getElementById('eligibility-card').outerHTML = schemesHtml;
+
+      } catch (error) {
+        console.error('Eligibility check failed:', error);
+        document.getElementById('eligibility-card').outerHTML = `
+          <div class="card fade-in">
+            <h4 class="mb-2">🎯 Eligible Schemes</h4>
+            <p style="color: var(--text-secondary);">Could not check eligibility. Please try the <a href="/eligibility.html">Eligibility Checker</a>.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Show application steps in a nicely formatted card
+    async function showApplicationSteps(policyId) {
+      const stepsContainer = document.getElementById('steps-container');
+      if (!stepsContainer) return;
+      
+      stepsContainer.innerHTML = `
+        <div class="card fade-in mt-3" style="border-left: 4px solid var(--primary);">
+          <div class="flex-center" style="padding: 2rem;">
+            <div class="spinner"></div>
+          </div>
+          <p class="text-center">Loading application steps...</p>
+        </div>
+      `;
+      
+      try {
+        const response = await fetch(`/eligibility/steps/${policyId}`);
+        if (!response.ok) throw new Error('Failed to fetch steps');
+        
+        const data = await response.json();
+        
+        let stepsHtml = `
+          <div class="card fade-in mt-3" style="border-left: 4px solid var(--primary);">
+            <h3>📝 How to Apply for ${data.policy_name || policyId}</h3>
+            
+            <h4 class="mt-3 mb-2">📄 Documents Required</h4>
+            <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+              ${(data.documents_required || []).map(doc => `<li>${doc}</li>`).join('')}
+            </ul>
+            
+            <h4 class="mt-3 mb-2">📋 Application Steps</h4>
+            <ol style="margin-left: 1.5rem; line-height: 2;">
+              ${(data.steps || []).map(step => `<li>${step.replace(/^\d+\.\s*/, '')}</li>`).join('')}
+            </ol>
+            
+            <div class="mt-3" style="padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+              <p style="margin: 0;"><strong>⏱️ Timeline:</strong> ${data.timeline || 'Application processing typically takes 15-30 days'}</p>
+              <p style="margin: 0.5rem 0 0 0;"><strong>📞 Help:</strong> ${data.helpline || 'Contact your nearest Jan Seva Kendra'}</p>
+            </div>
+            
+            <a href="${data.application_link || '#'}" target="_blank" class="btn btn-primary mt-3" style="display: inline-block; text-decoration: none;">
+              🌐 Visit Official Portal →
+            </a>
+          </div>
+        `;
+        
+        stepsContainer.innerHTML = stepsHtml;
+        
+      } catch (error) {
+        stepsContainer.innerHTML = `
+          <div class="card fade-in mt-3" style="background: var(--error); color: white;">
+            <h4>❌ Could not load steps</h4>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

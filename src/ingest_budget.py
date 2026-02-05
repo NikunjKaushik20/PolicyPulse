@@ -8,13 +8,27 @@ import pandas as pd
 def ingest_budget_data(policy_id: str, file_path: str):
     """Ingest budget data with enhanced metadata for societal impact tracking."""
     client = get_client()
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(file_path, comment='#')
     points = []
     
     for _, row in df.iterrows():
         year = int(row['year'])
-        allocation = float(row.get('allocated_crores', row.get('allocation', 0)))
-        expenditure = float(row.get('spent_crores', row.get('expenditure', 0)))
+        # Handle multiple column naming conventions - check DataFrame columns
+        allocation = 0
+        if 'allocated_crores' in df.columns:
+            allocation = float(row['allocated_crores'])
+        elif 'be_crores' in df.columns:
+            allocation = float(row['be_crores'])
+        elif 'allocation' in df.columns:
+            allocation = float(row['allocation'])
+        
+        expenditure = 0
+        if 'spent_crores' in df.columns:
+            expenditure = float(row['spent_crores'])
+        elif 'expenditure_crores' in df.columns:
+            expenditure = float(row['expenditure_crores'])
+        elif 'expenditure' in df.columns:
+            expenditure = float(row['expenditure'])
         
         content = f"Budget for {policy_id} year {year}: allocated {allocation}Cr, spent {expenditure}Cr"
         extra_fields = {}

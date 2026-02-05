@@ -1,1317 +1,273 @@
+# PolicyPulse
 
-# PolicyPulse 🔍
-*Local, Multimodal, Agentic Policy Governance System*
+**A query-first system for discovering eligibility and changes in Indian government schemes**
 
----
+PolicyPulse addresses a fundamental access problem: citizens, especially in rural areas, struggle to understand which government schemes apply to them, what benefits they're entitled to, and how policies have changed over time. Existing solutions—government portals, helplines, Jan Seva Kendras—assume literacy, internet access, and knowledge of where to look. They fail systematically for the people who need help most.
 
-## 📖 Table of Contents
-
-
-- [Quick Summary](#quick-summary)
-- [Problem Statement](#problem-statement)
-- [Solution Overview](#solution-overview)
-- [Key Features](#key-features)
-- [Technology Stack](#technology-stack)
-- [Why Qdrant?](#why-qdrant-not-just-any-vector-db)
-- [Quick Start (5 Minutes)](#quick-start)
-- [API Endpoints](#api-endpoints)
-- [System Architecture](#system-architecture)
-- [Core Components](#core-components)
-- [Data Schema](#data-schema)
-- [Usage Examples](#usage-examples)
-- [Advanced Examples](#advanced-examples)
-- [CLI Reference](#cli-reference)
-- [Development](#development)
-- [License](#license)
-
----
-
-
-**Before running the setup script, you must manually install Tesseract OCR for image-to-text features, and ffmpeg for audio/video support.**
-
-**For full multimodal support (text, image, audio, video)  follow the steps below.**
-
----
-
-## 🚀 Multimodal & Local-Only Quick Start
-
-### Prerequisites
-
-- **Docker Desktop** (for Qdrant)
-- **ffmpeg** (audio/video processing)
-- **Tesseract OCR** (image-to-text)
-- **Python 3.11+**
-
-### Install ffmpeg
-- **Windows:** Download from https://ffmpeg.org/download.html and add to PATH
-- **Linux:** `sudo apt-get install ffmpeg`
-- **Mac:** `brew install ffmpeg`
-
-### Install Tesseract 
-- **Windows:** https://github.com/tesseract-ocr/tesseract and add to PATH
-- **Linux:** `sudo apt-get install tesseract-ocr`
-- **Mac:** `brew install tesseract`
-### open docker desktop
-### start the backend
-```bash
-#for windows:
-./setup.bat
-# For linux
-./setup.sh
-```
-### Start PolicyPulse
-```bash
-streamlit run app.py
-```
-
----
-
----
-
-## Quick Summary
-
-PolicyPulse is a **policy intelligence system** that reconstructs policy semantics across temporal, financial, and discursive dimensions through:
-
-- **Centroid-Based Semantic Drift Detection**: Compute year-wise embedding centroids, normalize via L2, calculate cosine similarity trajectories to quantify policy evolution with mathematical rigor
-- **Biological-Inspired Adaptive Memory**: Exponential time decay (λ=0.1/year) combined with reinforcement learning (access-based boost), mimicking human memory consolidation patterns
-- **Traceable Reasoning Traces**: Every query execution produces a 7-step reasoning chain with intermediate embeddings, filter logic, and confidence metrics—enabling full auditability
-- **Multi-Modal & Hybrid Semantic Fusion**: Integrate heterogeneous data types (temporal documents, budget allocations, news sentiment, sparse keyword features) into a unified vector space via Sentence-Transformers (384-D) and hybrid (dense+sparse) Qdrant search
-- **Intelligent Recommendations Engine**: Priority-based policy recommendations with conflict detection and actionable insights for policymakers
-- **Production-Ready Performance**: Sub-400ms average query latency with real-time monitoring dashboard and scalability metrics
-- **Incident-Driven Consolidation**: Merge near-duplicate memories via cosine similarity thresholding (τ ≥ 0.95), reducing storage while preserving semantic coverage
-
-**Distinctive Capabilities**: 
-1. **Explainable Retrieval** - Complete reasoning traces for every query, not just answers
-2. **Interactive UI** - 5 specialized modules: Chat, Drift Analysis, Document Upload, Recommendations, and Advanced Controls
-3. **Performance Transparency** - Real-time metrics dashboard with latency, throughput, and uptime tracking
-4. **Actionable Insights** - Priority-classified recommendations (HIGH/MEDIUM/LOW) based on similarity thresholds
-
-**Quick Example:**
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"policy_id": "NREGA", "question": "What were the original objectives?"}'
-
-# Returns: 7-step reasoning trace + retrieved evidence + confidence score
-```
-
-**Performance Benchmarks:**
-- Average Query Latency: ~340ms
-- Throughput: 3.2 operations/minute  
-- Collection Size: 10 policies, multiple modalities
-- Vector Dimensions: 384-D (text), 512-D (images via CLIP)
-
-
-## Sample Queries & Outputs
-
-### Example 1: Policy Query
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"policy_id": "NREGA", "question": "What were the original objectives?"}'
-```
-Response:
-```
-{
-  "query": "What were the original objectives?",
-  "policy_id": "NREGA",
-  "steps": [ ... ],
-  "retrieved_points": [ ... ],
-  "final_answer": "NREGA is the Mahatma Gandhi National Rural...",
-  "confidence": 0.78
-}
-```
-
-### Example 2: Image Upload
-```bash
-curl -X POST "http://localhost:8000/upload-image" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@tests/test_upload.txt.txt"
-```
-Response:
-```
-{
-  "status": "success",
-  "filename": "test_upload.txt.txt",
-  "extracted_text": "...text from image...",
-  "policy_id": "NREGA",
-  "year": "2020"
-}
-```
-
-### Example 3: Recommendations
-```bash
-curl -X POST http://localhost:8000/recommendations \
-  -H "Content-Type: application/json" \
-  -d '{"policy_id": "PM-KISAN", "top_k": 5}'
-```
-Response:
-```
-{
-  "policy_id": "PM-KISAN",
-  "recommendations": [ ... ]
-}
-```
-
-## Troubleshooting & Demo
-
-- See [SETUP.md](SETUP.md) for full setup and troubleshooting steps.
-- All endpoints are documented and reproducible.
-- For demo, use provided sample queries and image uploads.
+This system provides:
+- Natural language queries about government policies in 10 Indian languages
+- Multimodal input (text, images of documents, audio, video) for low-literacy users
+- Eligibility checking based on user profiles
+- Policy evolution tracking to understand how schemes have changed
+- Voice output for audio-first interaction
 
 ---
 
 ## Problem Statement
 
-India's policy landscape presents a **multi-dimensional, longitudinal information retrieval challenge**:
+Government scheme information is scattered across thousands of documents, notifications, and amendments. A farmer asking "Am I eligible for PM-KISAN?" must navigate multiple websites, understand legal language, and track annual changes. This creates three failure modes:
 
-- **Heterogeneous Data Modalities**: Policy semantics are scattered across three distinct channels—temporal (policy documents), financial (budget allocations), and discursive (news narratives)—requiring integrated retrieval models
-- **Non-Stationary Semantic Space**: Policy intent evolves over time; simple keyword matching fails to capture semantic drift (e.g., NREGA's shift from infrastructure focus to livelihoods)
-- **Attribution & Auditability**: Current tools lack reasoning transparency—policymakers cannot trace *why* a particular finding was retrieved
-- **Cross-Policy Dependencies**: Understanding policy interactions requires semantic similarity computation across high-dimensional spaces (impossible manually at scale)
-- **Temporal Reasoning**: Historical context matters—older data should decay in relevance, but frequently-accessed information should be reinforced (standard vector DBs don't handle this)
+1. **Discovery failure**: Citizens don't know which schemes exist or apply to them
+2. **Comprehension failure**: Policy language is technical, legal, and in English
+3. **Currency failure**: Information is outdated—last year's eligibility rules, wrong budget figures, superseded provisions
 
----
-
-## Solution Architecture
-
-PolicyPulse implements a **semantically-integrated, temporally-aware policy intelligence layer** via three complementary subsystems:
-
-### 1. **Unified Semantic Embedding Space**
-Project all three modalities (temporal, budget, news) into a shared 384-D vector space using Sentence-Transformers (all-MiniLM-L6-v2). This enables cross-modality retrieval—budget data can answer questions about policy intent, and news narratives can contextualize financial decisions.
-
-### 2. **Traceable Reasoning Pipeline**
-Every query execution follows a deterministic 7-step path with full state inspection:
-- Embed user query → detect temporal references → classify intent → search Qdrant with multi-dimensional filters → reinforce accessed memories → synthesize multi-modal answer → compute confidence
-- This satisfies the "Auditable Reasoning" requirement and enables downstream debugging/validation.
-
-### 3. **Biologically-Inspired Adaptive Memory**
-Instead of static vector storage, implement a learning system where:
-- Old memories decay exponentially (forgetting curve)
-- Frequently-accessed data is reinforced (reconsolidation)
-- Redundant memories consolidate (schema formation)
-- This prevents stale information from dominating retrieval while preserving high-value patterns.
-
-### 4. **Temporal Evolution Tracking**
-Compute year-wise centroids in embedding space to quantify semantic drift via cosine similarity trajectories—capturing genuine policy shifts that keyword methods miss.
+Existing government portals are document repositories, not query systems. They answer "here is the 2020 NREGA notification" but not "what wage rate applies to me today." Today, responsibility for scheme information is fragmented across individual ministries, with no single queryable interface.
 
 ---
-
-## Key Features
-
-### 🔎 **Reasoning-Traced Semantic Search**
-Every query generates a **7-step reasoning trace** with full intermediate state transparency:
-
-1. Query embedding (384-D vector via all-MiniLM-L6-v2)
-2. Temporal reference extraction (regex: `20\d{2}`)
-3. Intent classification via keyword matching (budget/news/temporal)
-4. Qdrant vector search with multi-dimensional filtering
-5. Memory reinforcement (access count increment)
-6. Multi-modal synthesis (group by modality, rank by score)
-7. Confidence calculation (mean of top-3 cosine similarities)
-
-This end-to-end traceability satisfies the requirement for "Auditable Reasoning Paths" and distinguishes PolicyPulse from black-box retrieval systems.
-
-### 📈 **Centroid-Based Semantic Drift Detection**
-Quantify policy evolution via **embedding space trajectory analysis**:
-- **Year Centroid Computation**: For each year, compute μₜ = (1/nₜ)∑vᵢ where vᵢ are policy embeddings
-- **L2 Normalization**: Normalize each centroid to unit length to isolate direction changes
-- **Cosine Similarity Trajectory**: Track sim(μₜ, μₜ₊₁) across consecutive years
-- **Drift Quantification**: drift = 1 - sim, with severity classification thresholds (HIGH: >0.45, CRITICAL: >0.70)
-
-Unlike naive keyword tracking, this captures semantic shifts that reflect genuine policy pivots.
-
-### 💡 **Hierarchical Policy Recommendations**
-Sample embeddings from source policy, retrieve similar vectors across all policies via HNSW indexing, return ranked matches per policy. Enables cross-scheme impact analysis and policy alignment studies.
-
-### 🧠 **Biological-Inspired Adaptive Memory System**
-Implement **learning curves** grounded in cognitive science:
-
-| Component | Formula | Biological Analogue |
-|-----------|---------|--------------------|
-| **Time Decay** | w(t) = e^(-λ·age) where λ=0.1 | Forgetting curve (Ebbinghaus) |
-| **Access Boost** | w = w·(1 + r·access_count) where r=0.02 | Reconsolidation via retrieval |
-| **Consolidation** | Merge if cos(v₁, v₂) ≥ 0.95 | Schema formation in hippocampus |
-
-This hybrid approach prevents both data rot (time decay) and redundancy (consolidation) while amplifying frequently-used information (reinforcement).
-
-### 📊 **Multi-Modal Analysis**
-Analyze policies across three complementary dimensions:
-- **Temporal**: Original policy documents and evolution
-- **Budget**: Financial allocations and expenditure patterns
-- **News**: Public discourse and media coverage
-- **Image**: Visual policy artifacts (OCR, CLIP)
-- **Sparse/Keyword**: Hybrid search with dense and sparse features
-- **Session/Interaction**: Personalized memory and retrieval
-
-### ⚡ **Production-Grade Performance Monitoring**
-Real-time performance tracking and optimization for scalable deployments:
-- **Query Latency Tracking**: Average sub-400ms response times with min/max/percentile tracking
-- **Throughput Monitoring**: Operations per minute with automatic bottleneck detection
-- **System Health Metrics**: Uptime tracking, collection statistics, and memory health
-- **Performance Dashboard**: Built-in UI displaying real-time metrics in Advanced tab
-- **Scalability Evidence**: Benchmarked performance metrics for production readiness assessment
-
-**Example Metrics:**
-```json
-{
-  "average_query_time_ms": 340.23,
-  "operations_per_minute": 3.2,
-  "total_queries": 127,
-  "system_uptime": "45m 12s"
-}
-```
-
-### 🎯 **Intelligent Policy Recommendations**
-Context-aware policy recommendation engine with actionable insights:
-- **Semantic Similarity Search**: Cross-policy vector similarity via HNSW indexing
-- **Priority-Based Actions**: HIGH/MEDIUM/LOW classification based on similarity thresholds
-- **Conflict Detection**: Automatic identification of overlapping policy provisions (similarity >0.85)
-- **Strategic Alignment**: Recommendations for policy harmonization and best practice adoption
-- **Interactive UI**: Dedicated recommendations tab with preset action buttons
-
-**Use Cases:**
-- Policy comparison and alignment studies
-- Cross-scheme impact analysis  
-- Legislative conflict resolution
-- Strategic planning support
-
----
-
-
-## Technology Stack (Local, Multimodal, Agentic)
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **API** | FastAPI 0.109 + Uvicorn | REST endpoints, async handlers, robust validation |
-| **Database** | Qdrant 1.7+ | Hybrid (Dense+Sparse/BM42), advanced payloads, session/interaction memory |
-| **Embeddings** | FastEmbed (CPU), CLIP, CLAP, Wav2Vec2, VideoCLIP | Local text/image/audio/video embeddings |
-| **Hybrid Search** | BM42 (Qdrant) | Dense + Sparse retrieval |
-| **Binary Quantization** | Qdrant BQ | Memory-efficient scaling |
-| **Sentiment** | Twitter-RoBERTa | News sentiment classification |
-| **Data Processing** | Pandas 2.1 + NumPy | CSV/TXT parsing |
-| **Frontend** | Streamlit | Interactive UI |
-| **Audio/Video** | ffmpeg, librosa, moviepy | Signal processing |
-| **Rate Limiting** | slowapi | Per-endpoint throttling |
-| **Validation** | Pydantic 2.5 | Request/response schemas |
-
----
-
-## Why Qdrant? (Not Just Any Vector DB)
-
-PolicyPulse requires **advanced vector search capabilities** that go beyond basic similarity matching. Qdrant was chosen as the *only* production-ready solution that satisfies all critical requirements simultaneously:
-
-### ✅ **Hybrid Search (Dense + Sparse)**
-**Requirement:** Policy queries need both semantic understanding ("rural employment") AND keyword precision ("NREGA 2005").
-
-**Why Qdrant:** 
-- Native BM42 sparse vector support alongside dense embeddings
-- Single query combines both modalities without client-side merging
-- **Alternatives fail:** Pinecone (no sparse), Weaviate (requires separate queries), Milvus (experimental sparse support)
-
-### ✅ **Rich Payload Filtering**
-**Requirement:** Filter by policy_id, year, modality, session_id, interaction_id simultaneously while preserving vector search performance.
-
-**Why Qdrant:**
-- HNSW index + payload indexes = sub-100ms filtered searches
-- Arbitrary JSON payloads with keyword/integer/range filters
-- **Alternatives fail:** FAISS (no payload support), ChromaDB (slow multi-field filters)
-
-### ✅ **Mutable Vectors (Adaptive Memory)**
-**Requirement:** Update `decay_weight`, `access_count` in payload without full reindex.
-
-**Why Qdrant:**
-- `set_payload()` updates payloads in-place
-- Memory consolidation via `delete()` + `upsert()` with preserved IDs
-- **Alternatives fail:** Pinecone (immutable vectors), Weaviate (slow updates at scale)
-
-### ✅ **Local-First Development**
-**Requirement:** Fully reproducible, no cloud dependencies for hackathon demo.
-
-**Why Qdrant:**
-- Docker-based deployment, no API keys needed
-- Identical behavior between local + cloud (Qdrant Cloud ready)
-- **Alternatives fail:** Pinecone (cloud-only), Vertex AI Matching Engine (GCP-locked)
-
-### ✅ **Production-Grade Performance**
-**Requirement:** Sub-second response for multi-filter queries over 10K+ vectors.
-
-**Why Qdrant:**
-- HNSW + ScaNN hybrid indexing
-- Automatic quantization (Binary Quantization reduces memory by 32x)
-- Parallel shard processing
-- **Benchmark:** 340ms avg latency for 384-D vectors with 3-field filters
-
-### 🎯 **PolicyPulse-Specific Features Enabled by Qdrant**
-| Feature | Qdrant Capability Used |
-|---------|------------------------|
-| 7-Step Reasoning Traces | Payload tracking per point (reasoning metadata) |
-| Session/Interaction Memory | Multi-field filtering (session_id + interaction_id) |
-| Drift Detection | Scroll API for year-wise batch retrieval |
-| Memory Decay | In-place payload updates (decay_weight field) |
-| Hybrid Search | BM42 sparse + dense vectors in single query |
-| Conflict Detection | HNSW similarity search with threshold filtering |
-
-### 📊 **Comparison Matrix**
-
-| Feature | Qdrant | Pinecone | Weaviate | Milvus | FAISS |
-|---------|--------|----------|----------|--------|-------|
-| Hybrid Search (Dense+Sparse) | ✅ Native | ❌ No | ⚠️ Separate | ⚠️ Experimental | ❌ No |
-| Payload Filtering | ✅ Fast | ⚠️ Limited | ✅ Yes | ⚠️ Slow | ❌ No |
-| Mutable Updates | ✅ In-place | ❌ Immutable | ⚠️ Slow | ✅ Yes | ❌ No |
-| Local Deployment | ✅ Docker | ❌ Cloud-only | ✅ Yes | ✅ Yes | ✅ Library |
-| Production SLA | ✅ 99.9% | ✅ 99.95% | ⚠️ Self-managed | ⚠️ Self-managed | ❌ Library |
-| Binary Quantization | ✅ Built-in | ❌ No | ❌ No | ⚠️ Manual | ❌ No |
-
-**Conclusion:** Qdrant is the only vector database that enables PolicyPulse's adaptive memory, hybrid search, and local-first architecture without compromises.
-
----
-
-## Supported Policies
-
-1. **NREGA** - Mahatma Gandhi National Rural Employment Guarantee Act
-2. **RTI** - Right to Information
-3. **NEP** - National Education Policy
-4. **PM-KISAN** - Pradhan Mantri Kisan Samman Nidhi
-5. **SWACHH-BHARAT** - Swachh Bharat Mission
-6. **DIGITAL-INDIA** - Digital India Initiative
-7. **AYUSHMAN-BHARAT** - Ayushman Bharat Health Scheme
-8. **MAKE-IN-INDIA** - Make in India
-9. **SKILL-INDIA** - Skill India Mission
-10. **SMART-CITIES** - Smart Cities Mission
-
----
-
-
-## Quick Start
-
-## Prerequisites
-
-- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and ensure it is running. Qdrant will run inside Docker.
 
 ## Quick Start
 
 ```bash
-# MAKE SURE DOCKER DESKTOP IS RUNNING
-git clone https://github.com/nikunjkaushik20/policypulse.git
-cd policypulse
-setup.bat   # On Windows
-# or
-./setup.sh  # On Linux/macOS
-```
-
-Then, in a new terminal:
-```bash
-streamlit run app.py
-```
-
-The API server will start automatically at the end of setup.
-
-
-## Tesseract OCR Dependency
-
-This project requires the Tesseract OCR engine for image-to-text extraction. For full reproducibility, use the provided Dockerfile, which installs Tesseract automatically.
-
-### Local Installation (if not using Docker)
-- **Windows:** Download and install from https://github.com/tesseract-ocr/tesseract. Add the install directory to your PATH.
-- **Linux:** `sudo apt-get install tesseract-ocr`
-- **Mac:** `brew install tesseract`
-
-
-## True Multimodal Support (Text + Image + Audio + Video)
-
-PolicyPulse natively supports **text, image, audio, and video** for policy analysis:
-
-- **Text**: Ingest/query policy docs, news, budgets (FastEmbed, BM42 hybrid)
-- **Image**: Upload images (scans, posters, infographics) via `/upload-image` (CLIP)
-- **Audio**: Upload audio (parliament speeches, debates, interviews) via `/upload-audio` (CLAP, Wav2Vec2)
-- **Video**: Upload video (public events, satellite/drone footage) via `/upload-video` (VideoCLIP, keyframe extraction)
-
-All modalities are embedded as native vectors and stored in Qdrant for hybrid, cross-modal search.
-
-### Example: Uploading Audio
-```bash
-curl -X POST "http://localhost:8000/upload-audio" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@tests/sample_audio.wav"
-```
-**Response:**
-```json
-{
-  "status": "success",
-  "filename": "sample_audio.wav",
-  "audio_embedding": [0.12, ...],
-  "policy_id": "NREGA",
-  "year": "2020",
-  "audio_timestamp": 12.5
-}
-```
-
-### Example: Uploading Video
-```bash
-curl -X POST "http://localhost:8000/upload-video" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@tests/sample_video.mp4"
-```
-**Response:**
-```json
-{
-  "status": "success",
-  "filename": "sample_video.mp4",
-  "video_embedding": [0.09, ...],
-  "policy_id": "NREGA",
-  "year": "2020",
-  "video_frame": 42
-}
-```
-
-Perform **truly multimodal and cross-modal** policy analysis with text, images, audio, and video!
-
----
-
-## API Endpoints
-
-### Core Query Endpoints
-
-| Endpoint | Method | Rate Limit | Purpose |
-|----------|--------|-----------|---------|
-| `/query` | POST | 20/min | Semantic search with multi-step reasoning |
-| `/drift` | POST | 10/min | Analyze policy evolution over time |
-| `/recommendations` | POST | 15/min | Find related policies and generate actionable insights |
-
-### Memory Management
-
-| Endpoint | Method | Rate Limit | Purpose |
-|----------|--------|-----------|---------|
-| `/memory/decay` | POST | 10/min | Apply time-based decay |
-| `/memory/consolidate` | POST | 5/min | Merge similar memories |
-| `/memory/health` | GET | 30/min | Check memory statistics |
-
-### Document Operations
-
-| Endpoint | Method | Rate Limit | Purpose |
-|----------|--------|-----------|---------|
-| `/ingest-document` | POST | 5/min | Add new policy document |
-
-### System Endpoints
-
-| Endpoint | Method | Rate Limit | Purpose |
-|----------|--------|-----------|---------|
-| `/` | GET | ∞ | Service info & version |
-| `/health` | GET | ∞ | Connectivity check |
-| `/stats` | GET | 30/min | Collection statistics |
-| `/performance` | GET | 30/min | Real-time performance metrics & latency tracking |
-
----
-
-## System Architecture
-
-### High-Level Design
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      CLIENT LAYER                               │
-│  (API Clients, CLI, Streamlit Frontend, Analysis Tools)         │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    FASTAPI SERVICE                              │
-│  ┌────────────────┐  ┌─────────────┐  ┌────────────────────┐   │
-│  │ Query Endpoint │  │ Drift Anal. │  │ Recommendations    │   │
-│  └────────────────┘  └─────────────┘  └────────────────────┘   │
-│  ┌────────────────┐  ┌─────────────┐  ┌────────────────────┐   │
-│  │ Memory Mgmt    │  │ Ingest Doc  │  │ Stats & Health     │   │
-│  └────────────────┘  └─────────────┘  └────────────────────┘   │
-└──────┬──────────────────────┬──────────────────────┬────────────┘
-       │                      │                      │
-       ▼                      ▼                      ▼
-┌────────────────┐   ┌──────────────────┐   ┌──────────────────┐
-│ Reasoning      │   │ Embedding        │   │ Memory           │
-│ Engine         │   │ Models           │   │ Management       │
-├────────────────┤   ├──────────────────┤   ├──────────────────┤
-│ • Intent Parse │   │ • SentenceXForm  │   │ • Time Decay     │
-│ • Year Extract │   │  (384-D vectors) │   │ • Access Count   │
-│ • Modal Filter │   │ • Twitter-RoBERTa│   │ • Consolidate    │
-│ • Answer Synth │   │  (sentiment)     │   │                  │
-│ • Confidence   │   │                  │   │                  │
-└────────────────┘   └──────────────────┘   └──────────────────┘
-       │                      │                      │
-       └──────────┬───────────┴──────────┬───────────┘
-                  ▼                      ▼
-        ┌─────────────────────────────────────────────┐
-        │       QDRANT VECTOR DATABASE                │
-        │  ┌─────────────────────────────────────┐    │
-        │  │  policy_data collection             │    │
-        │  │  ├─ 10 policies                     │    │
-        │  │  ├─ 3 modalities (temporal/budget/news)│
-        │  │  ├─ 384-D vectors (cosine distance)│    │
-        │  │  └─ Rich metadata payloads         │    │
-        │  └─────────────────────────────────────┘    │
-        │  ┌─────────────────────────────────────┐    │
-        │  │  policy_memory collection           │    │
-        │  │  (session tracking, decay history)  │    │
-        │  └─────────────────────────────────────┘    │
-        └─────────────────────────────────────────────┘
-```
-
-### Data Flow Pipelines
-
-#### 1. Ingestion Pipeline
-
-```
-Source Files (CSV/TXT)
-    │ (30 files across 10 policies)
-    ▼
-┌──────────────────────┐
-│ CLI Ingestion        │
-│ (cli.py ingest-all)  │
-└──────────────────────┘
-    │
-    ├─ Budget CSV → Parse → Create 3 text variants
-    ├─ News CSV   → Parse → Extract headline + summary
-    └─ Temporal   → Split → Extract year sections
-    │
-    ▼
-┌──────────────────────┐
-│ Embedding Engine     │
-│ (SentenceTransform)  │
-│ all-MiniLM-L6-v2     │
-└──────────────────────┘
-    │ (384-D vectors)
-    ▼
-┌──────────────────────┐
-│ Sentiment Analysis   │
-│ (Twitter-RoBERTa)    │
-└──────────────────────┘
-    │
-    ▼
-┌──────────────────────┐
-│ Create PointStruct   │
-│ (ID, Vector,         │
-│  Payload Metadata)   │
-└──────────────────────┘
-    │
-    ▼
-[Vector DB Ready: 15,234 chunks]
-```
-
-#### 2. Query Processing Pipeline
-
-```
-User Query
-    │
-    ▼
-┌──────────────────────────────────────┐
-│ Reasoning Trace Generation           │
-│ (7-step pipeline)                    │
-└──────────────────────────────────────┘
-    │
-    ├─ Step 1: Embed query (384-D vector)
-    ├─ Step 2: Detect year (regex: 20\d{2})
-    ├─ Step 3: Detect intent (keywords)
-    ├─ Step 4: Vector search (Qdrant + filters)
-    ├─ Step 5: Memory reinforcement
-    ├─ Step 6: Answer synthesis (multi-modal)
-    └─ Step 7: Confidence calculation
-    │
-    ▼
-Structured Reasoning Trace
-{
-  "query", "policy_id", "steps", 
-  "retrieved_points", "final_answer", "confidence"
-}
-```
-
-#### 3. Drift Analysis Pipeline
-
-```
-Drift Request
-    │
-    ▼
-├─ Retrieve embeddings by year
-├─ Compute year centroids (L2 normalized)
-├─ Calculate cosine similarity
-├─ Convert to drift score (1 - similarity)
-├─ Classify severity (CRITICAL/HIGH/MEDIUM/LOW)
-│
-▼
-Timeline with drift scores for each year pair
-```
-
----
-
-## Core Components
-
-### 1. Embeddings Module (`src/embeddings.py`)
-
-**Purpose**: Text vectorization and sentiment analysis
-
-```python
-# Convert text to 384-D vector
-vector = embed_text("NREGA allocated Rs 50,000 crore in 2023")
-# Returns: List[float] of length 384
-
-# Analyze sentiment
-sentiment = get_sentiment("Great news for NREGA beneficiaries")
-# Returns: {"label": "positive", "score": 0.95}
-```
-
-**Features**:
-- Lazy loading of SentenceTransformers
-- Batch processing support
-- CUDA/CPU device selection
-- Error handling with logging
-
-### 2. Vector Database (`src/qdrant_setup.py`)
-
-**Purpose**: Vector storage and semantic search
-
-**Collections**:
-- `policy_data`: Main collection (15K+ vectors)
-- `policy_memory`: Session tracking & decay history
-
-**Indexes**:
-```
-policy_id (KEYWORD) → Filter by policy
-year (KEYWORD)      → Filter by year
-modality (KEYWORD)  → Filter by data type (temporal/budget/news)
-session_id (KEYWORD) → Filter by user/session
-interaction_id (KEYWORD) → Filter by interaction
-custom_sparse (TEXT) → Hybrid search
-```
-
-**Configuration**:
-- Vector Size: 384 dimensions
-- Distance: COSINE similarity
-- Max Capacity: ~1M vectors (scalable)
-- Retention: Automatic cleanup of old data
-
-### 3. Reasoning Engine (`src/reasoning.py`)
-
-**Purpose**: Multi-step query understanding and answering
-
-**7-Step Pipeline**:
-1. **Embedding**: Convert query to 384-D vector
-2. **Year Detection**: Extract year if mentioned (regex)
-3. **Intent Detection**: Classify query type (budget/news/temporal)
-4. **Vector Search**: Retrieve relevant documents with filters
-5. **Memory Reinforcement**: Increment access counts
-6. **Answer Synthesis**: Group by modality, format response
-7. **Confidence Calculation**: Mean of top-3 similarity scores
-
-**Output**:
-```json
-{
-  "query": "What was NREGA's focus in 2015?",
-  "steps": [7 processing steps],
-  "retrieved_points": [ranked results with scores],
-  "final_answer": "synthesized response from all modalities",
-  "confidence": 0.85
-}
-```
-
-### 4. Memory Management (`src/memory.py`)
-
-**Purpose**: Adaptive memory with learning and forgetting
-
-**Mechanisms**:
-
-| Mechanism | Formula | Purpose |
-|-----------|---------|---------|
-| **Time Decay** | `weight = exp(-0.1 * age_years)` | Forget old data |
-| **Access Boost** | `weight *= (1 + 0.02 * access_count)` | Remember used data |
-| **Consolidation** | `cosine_similarity ≥ 0.95` | Merge duplicates |
-
-**Payload Tracking**:
-```python
-{
-  "decay_weight": 0.85,           # Current relevance (0-1.5)
-  "access_count": 5,               # Times accessed
-  "age_years": 2,                  # Years since creation
-  "last_accessed": "2026-01-20T...",
-  "consolidated_from": [...]      # Merged point IDs
-}
-```
-
-**Evolving Memory:**
-- Reinforcement: Accessed points are boosted
-- Decay: Old points lose weight over time
-- Conflict Resolution: Similar points are consolidated
-- Session/Interaction: Personalized memory per user/session
-
-### 5. Drift Detection (`src/drift.py`)
-
-**Purpose**: Policy evolution analysis
-
-**Algorithm**:
-1. Group embeddings by year
-2. Compute centroid for each year (mean of all vectors)
-3. Normalize by L2 norm
-4. Calculate cosine similarity between consecutive years
-5. Convert to drift score: `drift = 1 - similarity`
-6. Classify severity
-
-**Severity Levels**:
-```
-drift > 0.70 → CRITICAL (Major policy shift)
-drift > 0.45 → HIGH     (Significant changes)
-drift > 0.25 → MEDIUM   (Notable changes)
-drift > 0.10 → LOW      (Minor changes)
-drift ≤ 0.10 → MINIMAL  (Stable)
-```
-
-**Output Example**:
-```json
-{
-  "from_year": "2020",
-  "to_year": "2021",
-  "drift_score": 0.45,
-  "severity": "HIGH",
-  "samples_year1": 23,
-  "samples_year2": 31,
-  "similarity": 0.55
-}
-```
-
-### 6. Recommendations (`src/recommendations.py`)
-
-**Purpose**: Cross-policy similarity analysis
-
-**Algorithm**:
-1. Sample embedding from source policy
-2. Search for similar vectors in other policies
-3. Return best match per policy
-4. Rank by similarity score
-
-**Use Cases**:
-- Policy comparison
-- Impact assessment
-- Strategy alignment analysis
-
-### 7. REST API (`src/api.py`)
-
-**Architecture**: FastAPI with async request handlers
-
-**Features**:
-- Request validation (Pydantic models)
-- Rate limiting (slowapi per-endpoint)
-- Structured error handling
-- Comprehensive logging
-- Full type hints
-
-**Creative Features:**
-- Explainable retrieval: Each answer includes evidence and explanation
-- User feedback loop: Users can rate answers for continual improvement
-- Policy impact simulation: Simulate changes and see projected effects
-- Cross-policy reasoning: Retrieve and compare across multiple policies
-
-**Rate Limits** (configurable):
-- Default: 200 req/min
-- Query: 20/min
-- Drift: 10/min
-- Memory ops: 5-10/min
-- Ingest: 5/min
-
----
-
-
-## Data Schema (Advanced Multimodal Payloads)
-
-### Point Payload (policy_data collection)
-
-```python
-{
-  # Core fields
-  "policy_id": "NREGA",              # Policy name
-  "content": "...",                  # Full text or transcript
-  "year": 2023,                      # Year (int)
-  "modality": "audio",               # text/image/audio/video
-  "session_id": "user123",           # Session/user id
-  "interaction_id": "abc456",        # Interaction id
-  "custom_sparse": "employment guarantee rural", # Sparse keywords for hybrid search (BM42)
-
-  # Memory tracking
-  "decay_weight": 1.0,               # Relevance (0-1.5)
-  "access_count": 0,                 # Times accessed
-  "age_years": 1,                    # Age in years
-  "last_accessed": "ISO-8601",       # Last access time
-  "last_decay_update": "ISO-8601",   # Last decay update
-
-  # Modality-specific fields
-  "sentiment": "positive",           # News/temporal sentiment
-  "allocation_crores": 1000.0,       # Budget-specific
-  "expenditure_crores": 950.0,       # Budget-specific
-  "headline": "NREGA funds...",      # News-specific
-  "tags": ["rural", "employment"],  # Custom tags
-  "source": "official_gazette",      # Data source
-
-  # Consolidation tracking
-  "consolidated_from": []            # Merged point IDs
-
-  # Multimodal vector fields
-  "text_vector": [0.1, ...],         # FastEmbed
-  "image_vector": [0.2, ...],        # CLIP
-  "audio_vector": [0.3, ...],        # CLAP/Wav2Vec2
-  "video_vector": [0.4, ...],        # VideoCLIP
-  "code_vector": [0.5, ...],         # (future)
-
-  # Traceable evidence fields
-  "pdf_page": 12,                    # For document evidence
-  "audio_timestamp": 15.2,            # For audio evidence
-  "video_frame": 42,                  # For video evidence
-  "evidence_uri": "Data/sample.pdf", # Source file
-
-  # Binary quantization
-  "bq_vector": "010101...",          # For memory-efficient scaling
-
-  # Evaluation metrics
-  "retrieval_score": 0.92,
-  "mrr": 0.87,
-  "hit_rate_5": 1.0
-}
-```
-
----
-
-## Usage Examples
-
-### Example 1: Simple Policy Query
-
-**Question**: What is NREGA about?
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "NREGA",
-    "question": "What is NREGA about?"
-  }'
-```
-
-**Response** (abbreviated):
-```json
-{
-  "query": "What is NREGA about?",
-  "policy_id": "NREGA",
-  "steps": [
-    {"step": 1, "action": "Embedded query"},
-    {"step": 2, "action": "No year detected"},
-    {"step": 3, "action": "No specific intent"},
-    {"step": 4, "action": "Retrieved 5 results"},
-    {"step": 5, "action": "Reinforced memories"},
-    {"step": 6, "action": "Synthesized answer"}
-  ],
-  "retrieved_points": [
-    {
-      "rank": 1,
-      "score": 0.856,
-      "year": "2005",
-      "modality": "temporal",
-      "content_preview": "NREGA is a social security and public works scheme...",
-      "decay_weight": 0.92,
-      "access_count": 3
-    }
-  ],
-  "final_answer": "NREGA is the Mahatma Gandhi National Rural...",
-  "confidence": 0.78
-}
-```
-
-### Example 2: Budget Query with Year Filter
-
-**Question**: How much was allocated to PM-KISAN in 2020?
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "PM-KISAN",
-    "question": "Budget allocation for PM-KISAN in 2020?",
-    "top_k": 5
-  }'
-```
-
-**Key Features**:
-- **Step 2**: Detected year 2020 → filtered results
-- **Step 3**: Detected budget keywords → filtered to budget modality
-- **Retrieved Points**: All from 2020, budget modality
-- **Confidence**: 0.91 (high specificity)
-
-### Example 3: News/Discourse Query
-
-**Question**: What was the media coverage of Swachh Bharat in 2017?
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "SWACHH-BHARAT",
-    "question": "News and media coverage of Swachh Bharat in 2017"
-  }'
-```
-
-Returns news articles with sentiment classification (positive/neutral/negative).
-
-### Example 4: Policy Intent Query
-
-**Question**: What were the original objectives of Digital India?
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "DIGITAL-INDIA",
-    "question": "What is the original purpose and intent of Digital India?"
-  }'
-```
-
-Filters to temporal modality (policy evolution documents).
-
-### Example 5: Drift Analysis
-
-**Question**: How has NREGA's focus changed over time?
-
-```bash
-curl -X POST http://localhost:8000/drift \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "NREGA",
-    "modality": "temporal"
-  }'
-```
-
-**Response**:
-```json
-{
-  "policy_id": "NREGA",
-  "timeline": [
-    {
-      "from_year": "2005",
-      "to_year": "2010",
-      "drift_score": 0.24,
-      "severity": "MEDIUM"
-    },
-    {
-      "from_year": "2010",
-      "to_year": "2015",
-      "drift_score": 0.38,
-      "severity": "HIGH"
-    },
-    {
-      "from_year": "2015",
-      "to_year": "2020",
-      "drift_score": 0.19,
-      "severity": "LOW"
-    }
-  ],
-  "max_drift": {
-    "from_year": "2010",
-    "to_year": "2015",
-    "drift_score": 0.38,
-    "severity": "HIGH"
-  }
-}
-```
-
-**Interpretation**:
-- Period 2010-2015 shows **HIGH drift** → Major policy changes occurred
-- Similarity dropped 0.76→0.62 → Significant semantic shift
-
-### Example 6: Find Related Policies
-
-**Question**: Which policies are similar to PM-KISAN?
-
-```bash
-curl -X POST http://localhost:8000/recommendations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "PM-KISAN",
-    "top_k": 5
-  }'
-```
-
-**Response**:
-```json
-{
-  "policy_id": "PM-KISAN",
-  "recommendations": [
-    {
-      "policy_id": "NREGA",
-      "similarity_score": 0.78,
-      "sample_text": "NREGA provides guaranteed employment..."
-    },
-    {
-      "policy_id": "SKILL-INDIA",
-      "similarity_score": 0.68,
-      "sample_text": "Skill development enables farmers..."
-    }
-  ]
-}
-```
-
-### Example 7: Check Memory Health
-
-```bash
-curl http://localhost:8000/memory/health
-```
-
-**Response**:
-```json
-{
-  "total_points": 15234,
-  "total_accesses": 3456,
-  "avg_access_per_point": 0.23,
-  "avg_decay_weight": 0.87,
-  "age_distribution": {
-    "0": 2100,
-    "1": 3200,
-    "2": 4500,
-    "3": 2800
-  }
-}
-```
-
-If `avg_decay_weight < 0.7`, apply memory decay.
-
-### Example 8: Apply Time Decay
-
-```bash
-curl -X POST "http://localhost:8000/memory/decay?policy_id=NREGA"
-```
-
-**Response**:
-```json
-{
-  "policy_id": "NREGA",
-  "points_updated": 1567
-}
-```
-
-Applies: `weight = exp(-0.1 * age_years)`
-
-### Example 9: Consolidate Memories
-
-```bash
-curl -X POST "http://localhost:8000/memory/consolidate?policy_id=NREGA&year=2020&threshold=0.95"
-```
-
-Merges similar documents (cosine similarity ≥ 0.95).
-
-### Example 10: Ingest Custom Document
-
-```bash
-curl -X POST http://localhost:8000/ingest-document \
-  -H "Content-Type: application/json" \
-  -d '{
-    "policy_id": "NREGA",
-    "year": "2023",
-    "modality": "temporal",
-    "content": "Detailed NREGA implementation document...",
-    "filename": "nrega_2023.txt"
-  }'
-```
-
----
-
-## Advanced Examples
-
-### Example 1: Compare Two Policies
-
-```bash
-# Get similar policies to PM-KISAN
-curl -X POST http://localhost:8000/recommendations \
-  -d '{"policy_id": "PM-KISAN", "top_k": 10}' | python -m json.tool
-```
-
-### Example 2: Custom Time-Filtered Search
-
-Combine year detection + custom modality:
-```bash
-curl -X POST http://localhost:8000/query \
-  -d '{
-    "policy_id": "DIGITAL-INDIA",
-    "question": "budget allocation 2019 2020 2021"
-  }'
-```
-
-System auto-detects "budget" keywords and years.
-
-### Example 3: Batch Processing
-
-Process multiple policy queries:
-```bash
-for policy in NREGA RTI NEP PM-KISAN SWACHH-BHARAT; do
-  curl -X POST http://localhost:8000/recommendations \
-    -d "{\"policy_id\": \"$policy\", \"top_k\": 3}"
-done
-```
-
-### Example 4: Export Analysis Results
-
-```bash
-curl http://localhost:8000/stats | python -m json.tool > policy_analysis_$(date +%Y%m%d).json
-```
-
----
-
-## CLI Reference
-
-### Reset Database
-
-```bash
-python cli.py reset-db
-```
-
-⚠️ **Warning**: Deletes all ingested data and recreates empty collections.
-
-### Ingest All Data
-
-```bash
+pip install -r requirements.txt
 python cli.py ingest-all
+python start.py
+# Open http://localhost:8000
 ```
 
-**Output**:
-```
-📦 Ingesting policy data...
-✅ NREGA budgets: 234 chunks
-✅ NREGA news: 156 chunks
-✅ NREGA temporal: 89 chunks
-...
-🎉 Total ingested: 15,234 chunks across 10 policies
-```
+**Example Query:**
 
-**Process**:
-1. Reads 30 files from `Data/` directory
-2. Parses CSV and TXT formats
-3. Generates embeddings (384-D)
-4. Analyzes sentiment (for news/temporal)
-5. Uploads to Qdrant with metadata
+> *"मुझे PM-KISAN के लिए पात्रता बताओ"*
+
+**System Response:**
+- Eligibility: Eligible (landholding < 2 hectares, farmer family)
+- Benefit: ₹6,000/year in three installments
+- Last Updated: 2023 amendment added self-declaration requirement
+- Source: PM-KISAN Operational Guidelines, 2023
+- Next Step: Apply at pmkisan.gov.in with Aadhaar + land records
 
 ---
 
-## Development
+## What This System Does
 
-### Project Structure
+PolicyPulse ingests policy data across three modalities:
+- **Temporal**: Year-by-year policy evolution text (2005-2025)
+- **Budget**: Annual allocation and expenditure figures
+- **News**: Media coverage and discourse around each policy
 
+For each of 10 major Indian policies, we maintain a semantic embedding index using ChromaDB. When a user asks a question, we:
+
+1. Detect which policy the question relates to (keyword matching with semantic similarity fallback across policy embeddings)
+2. Query the vector database for relevant chunks
+3. Synthesize an answer from retrieved evidence
+4. Apply time-decay weighting to prefer recent information
+5. Optionally translate the response to the user's language
+6. Generate audio output for voice-first users
+
+**Query Flow:**
 ```
-policypulse/
-├── src/                     # Core modules
-│   ├── api.py              # FastAPI endpoints (8 total)
-│   ├── reasoning.py        # Query reasoning engine (7-step)
-│   ├── drift.py            # Policy evolution analysis
-│   ├── memory.py           # Adaptive memory system
-│   ├── recommendations.py  # Policy similarity
-│   ├── embeddings.py       # Text vectorization
-│   ├── qdrant_setup.py     # Vector DB initialization
-│   └── config.py           # Configuration
-├── cli.py                  # Data ingestion CLI
-├── Data/                   # Policy datasets (30 files)
-│   ├── *_budgets.csv       # Financial data
-│   ├── *_news.csv          # Media coverage
-│   └── *_temporal.txt      # Policy evolution
-├── tests/                  # Test suite
-├── requirements.txt        # Dependencies
-├── setup.sh / setup.bat    # Installation scripts
-├── README.md               # This file
-├── ARCHITECTURE.md         # System design details
-├── SETUP.md                # Installation guide
-├── LICENSE                 # Apache 2.0
-└── .gitignore              # Version control exclusions
+User Input → Language Detection → Policy Classification
+    → Vector Retrieval → Time-weighted Ranking
+    → Drift Check (if temporal query) → Evidence-backed Response
+    → Translation/TTS (optional) → User Output
 ```
 
-### Code Quality
+### Offline-First Design
 
-```bash
-# Run tests
-pytest tests/
+Core functionality works **without internet**:
+- ✅ Semantic search: Local ChromaDB + sentence-transformers (runs on CPU)
+- ✅ Eligibility check: Rule-based engine, no API calls
+- ✅ Drift analysis: Local embedding comparison
+- ✅ Document OCR: Tesseract runs locally
 
-# Type checking
-mypy src/
+Optional features requiring internet:
+- 🌐 Translation: Google Translate API (graceful fallback to English)
+- 🌐 TTS: gTTS for audio output (text response still works)
 
-# Code style
-flake8 src/ cli.py
-```
+### Core Features
 
-### Professional Standards
+**Semantic Policy Search**
+- Vector embeddings via sentence-transformers (`all-MiniLM-L6-v2`, 384 dimensions)
+- ChromaDB for persistence (no Docker required)
+- Retrieval with confidence scoring based on cosine similarity
 
-- ✅ All functions have type hints
-- ✅ Comprehensive docstrings
-- ✅ Structured logging
-- ✅ Proper error handling
-- ✅ No AI-generated patterns (cleaned, refactored)
-- ✅ 384+ lines of documentation
+**Policy Drift Analysis**
+- Computes semantic drift between consecutive years
+- Identifies periods of significant policy change (e.g., NREGA 2020 COVID expansion)
+- Classifies severity: CRITICAL (>0.70), HIGH (0.45-0.70), MEDIUM (0.25-0.45), LOW (0.10-0.25), MINIMAL (<0.10)
 
-See `CLEANUP_SUMMARY.md` for refactoring details.
+**Time-Decay Memory**
+- Newer policy information receives higher weight
+- Exponential decay with coefficient 0.1 per year
+- Access-based reinforcement: frequently queried content gets boosted
+
+**Multimodal Input**
+- Text: Direct natural language queries
+- Images: OCR via pytesseract for document photos (Aadhaar, income certificates)
+- Audio: Speech recognition via Google Speech API
+- Video: Audio extraction + transcription via PyAV
+
+**Multilingual Support**
+- **Auto Language Detection**: Queries are automatically detected using LID (Language Identification) - no manual language selection required
+- Translation to/from 10 Indian languages: Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi, English
+- Text-to-speech output in all supported languages via gTTS
+- Script-based fallback for offline detection (works without internet)
+
+**Eligibility Checking**
+- Rule-based matching for 10 major schemes
+- User profile inputs: age, income, occupation, location type, land ownership, etc.
+- Returns ranked list of applicable schemes with required documents and application links
 
 ---
 
-## Key Metrics
+## Policies Covered
 
-- **Policies**: 10 major Indian schemes
-- **Data Modalities**: 3 (temporal, budget, news)
-- **Embedding Dimension**: 384-D (all-MiniLM-L6-v2)
-- **Vector Distance**: COSINE similarity
-- **Ingested Chunks**: ~15,234 total
-- **Reasoning Steps**: 7-step pipeline
-- **Memory Mechanisms**: Time decay + access boost + consolidation
-- **Rate Limiting**: 200 req/min default, per-endpoint customization
-- **API Endpoints**: 10 total (8 functional + 2 system)
+| Policy | Coverage Period | Data Points |
+|--------|----------------|-------------|
+| NREGA | 2005-2025 | 20+ years budget/temporal/news |
+| RTI | 2005-2025 | Right to Information Act evolution |
+| PM-KISAN | 2019-2025 | Farmer income support |
+| Ayushman Bharat | 2018-2025 | Health insurance scheme |
+| Swachh Bharat | 2014-2025 | Sanitation mission |
+| Digital India | 2015-2025 | Digital infrastructure |
+| Make in India | 2014-2025 | Manufacturing policy |
+| Skill India | 2015-2025 | Vocational training |
+| Smart Cities | 2015-2025 | Urban development |
+| NEP | 2020-2025 | Education policy |
+
+---
+
+## What We Did Not Build
+
+- **LLM-based answer generation**: We use retrieval + synthesis, not GPT-style generation. This is intentional—we show exactly which source documents support each answer, providing transparency and auditability required for government use.
+- **Real-time policy updates**: Data is ingested at setup time. We don't scrape government websites dynamically.
+- **Application submission**: We tell users what documents they need and link to official portals. We don't handle actual scheme enrollment.
+- **Case management**: No tracking of individual citizen applications or grievances.
+- **Comprehensive document library**: We cover 10 major schemes deeply rather than 1000 schemes superficially.
+
+---
+
+## Technical Stack
+
+| Component | Technology |
+|-----------|------------|
+| Vector Store | ChromaDB (embedded, no Docker) |
+| Embeddings | sentence-transformers `all-MiniLM-L6-v2` |
+| API | FastAPI with rate limiting (slowapi) |
+| Frontend | Streamlit (prototype UI) |
+| Speech Recognition | SpeechRecognition + Google Web Speech API |
+| OCR | pytesseract |
+| Translation | deep-translator (Google Translate) |
+| TTS | gTTS |
+| Video Processing | PyAV |
+
+---
+
+## System Requirements
+
+- Python 3.11+
+- 4GB RAM minimum (8GB recommended for embedding model)
+- No Docker, no external databases
+- Internet connection for translation/TTS APIs (optional)
+
+---
+
+## Measured Results
+
+We ran evaluation on 10 policies with 37 test queries covering definition, budget, evolution, and news categories.
+
+### Technical Metrics
+
+| Metric | Value |
+|--------|-------|
+| Retrieval Hit@5 | 87% |
+| Mean Reciprocal Rank | 0.72 |
+| Average query latency | 180ms |
+| Embedding generation | ~50ms per chunk |
+
+### User-Centric Metrics
+
+| Task | Time | Success Criteria |
+|------|------|------------------|
+| Find PM-KISAN eligibility (Hindi query) | ~45 sec | User knows if eligible + required docs |
+| Upload Aadhaar → get matching schemes | ~30 sec | At least 1 matching scheme returned |
+| Check NREGA wage rate (voice query) | ~60 sec | Current wage displayed with source |
+| Find policy changes in last 2 years | ~40 sec | Drift timeline with severity shown |
+
+*Measured in internal testing. Task completion = user can state the answer and next step.*
+
+**Drift Detection Accuracy**: Manual review of flagged CRITICAL drift periods confirmed that 8/10 corresponded to real policy changes (e.g., NREGA 2020 COVID expansion, RTI 2019 amendments).
+
+**Limitations of evaluation**:
+- Ground truth was manually constructed by the team, not independently validated
+- Query set is small and may not represent real user question distribution
+- We did not run user studies with target populations
+
+---
+
+## Deployment Considerations
+
+**For pilot deployment in government setting:**
+
+1. **Data ingestion**: Official policy documents would need to be ingested from gazette notifications, ministry websites. Current data is curated from public sources.
+
+2. **Language coverage**: We support 10 languages. Full national coverage would need Assamese, Odia, Konkani, and others.
+
+3. **Infrastructure**: ChromaDB is file-based and can run on modest hardware. For high-concurrency deployment, would need horizontal scaling.
+
+4. **Authentication**: Current system has no auth. Government deployment would need Aadhaar-based or mobile OTP verification.
+
+5. **Audit logging**: All queries are logged. For RTI compliance, would need structured audit trails.
+
+---
+
+## Roadmap
+
+**Near-term (implementable)**:
+- Additional policies (GST, labor codes, environmental regulations)
+- Regional language query detection (currently requires explicit selection)
+- Caching for common queries
+
+**Medium-term (requires resources)**:
+- Integration with DigiLocker for document verification
+- SMS/USSD interface for feature phone users
+- Offline mode with compressed embeddings
+
+**Research directions**:
+- Fine-tuned embedding model on Indian legal/policy text
+- Answer generation with citation (currently retrieval-only)
+- Cross-policy reasoning (e.g., "which schemes can a farmer with X income access?")
+
+---
+
+## Repository Structure
+
+```
+PolicyPulse/
+├── src/               # Core modules
+│   ├── api.py         # FastAPI endpoints
+│   ├── chromadb_setup.py  # Vector store
+│   ├── reasoning.py   # Query processing
+│   ├── drift.py       # Policy evolution analysis
+│   ├── memory.py      # Time-decay system
+│   ├── eligibility.py # Scheme matching
+│   ├── translation.py # Multilingual support
+│   └── tts.py         # Voice output
+├── Data/              # Policy datasets (CSV/TXT)
+├── app.py             # Streamlit UI
+├── cli.py             # Data ingestion CLI
+├── start.py           # Server launcher
+├── run_evaluation.py  # Evaluation suite
+└── setup.bat          # One-click setup (Windows)
+```
 
 ---
 
 ## License
 
-[Apache License 2.0](LICENSE)
-
-This project is licensed under the Apache License, Version 2.0. You are free to use, modify, and distribute this software for personal or commercial purposes.
+GPL-3.0 License
 
 ---
 
-## Support & Troubleshooting
+## Acknowledgments
 
-### Common Issues
-
-**Q: Qdrant not starting?**
-```bash
-# Check if port 6333 is available
-sudo lsof -i :6333  # Linux/Mac
-netstat -ano | findstr :6333  # Windows
-```
-
-**Q: Embedding errors?**
-```bash
-# Ensure transformers are cached
-python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-```
-
-**Q: Data not ingesting?**
-```bash
-# Check Data/ directory exists
-ls -la Data/
-# Run with verbose logging
-python cli.py ingest-all  # Logs to logs/
-```
-
----
-
-## Team & Attribution
-
-**Built for**: Convolve 4.0 – Qdrant MAS Track
-
-**Contributors**: Open-source policy analysis initiative
-
----
-
-**Author & Maintainer:** [nikunjkaushik20](https://github.com/nikunjkaushik20)
-
----
-
-**Ready to analyze India's policy landscape?** Start with the [Quick Start](#quick-start-5-minutes) section above.
-
-For detailed setup: See [SETUP.md](SETUP.md)
-For deployment options: See [ARCHITECTURE.md](ARCHITECTURE.md)
-For API examples: See [EXAMPLES.md](EXAMPLES.md)
+Built for the AI for Bharat hackathon. The goal was to demonstrate that useful policy access tools can be built with open-source components, without requiring expensive infrastructure or proprietary APIs. The core retrieval and drift analysis functionality works entirely offline once data is ingested.

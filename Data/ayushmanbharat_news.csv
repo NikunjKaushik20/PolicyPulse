@@ -1,25 +1,10 @@
-year,headline,source,sentiment,summary
-2018,PM Launches Ayushman Bharat - World Largest Health Scheme,The Hindu,positive,Pradhan Mantri Jan Arogya Yojana provides 5 lakh rupees health cover to 50 crore citizens
-2018,Hospitals Rush to Join Ayushman Network,Times of India,positive,Private hospitals seek empanelment to access government reimbursement scheme
-2018,Implementation Challenges in Poor States,Indian Express,negative,Eastern states struggle with hospital infrastructure and awareness gaps
-2019,Ayushman Bharat Crosses 50 Million Beneficiaries,Economic Times,positive,Health insurance scheme achieves first year target ahead of schedule
-2019,Fraudulent Claims Detected in Health Scheme,Business Standard,negative,Government cracks down on hospitals inflating procedures and costs
-2019,Ayushman Cards Issued to 10 Crore Families,The Hindu,positive,Beneficiary identification process covers poorest 40 percent of population
-2020,Ayushman Bharat Covers COVID Treatment,Times of India,positive,Pandemic hospitalization included under health insurance umbrella
-2020,Scheme Proves Lifesaver During Health Crisis,Indian Express,positive,Poor families avoid medical bankruptcy due to government coverage
-2020,Hospital Bed Shortage Exposes Gaps,Economic Times,negative,Insufficient empaneled hospitals in rural areas during COVID surge
-2021,Telemedicine Added to Ayushman Services,The Hindu,positive,Remote consultation feature enables access to specialist doctors
-2021,Beneficiaries Cross 18 Crore Mark,Business Standard,positive,Rapid expansion makes scheme world largest publicly funded health program
-2021,Pending Hospital Reimbursements Rise,Indian Express,negative,States delay payments to empaneled hospitals straining finances
-2022,Health and Wellness Centers Reach 1 Lakh,Economic Times,positive,Preventive healthcare infrastructure expanded under Ayushman framework
-2022,Digital Health Mission Integrated with Ayushman,Times of India,positive,Electronic health records enable seamless treatment across hospitals
-2022,State Governments Demand Higher Funding,The Hindu,negative,Cost-sharing disputes between center and states threaten scheme sustainability
-2023,Tribal Areas Get Dedicated Health Camps,Indian Express,positive,Mobile medical units bring Ayushman services to remote populations
-2023,Scheme Covers 32 Crore Hospital Admissions,Business Standard,positive,Cumulative impact shows reduced out-of-pocket health expenditure
-2023,Private Hospital Empanelment Drops,Economic Times,negative,Low reimbursement rates discourage quality hospitals from participation
-2024,Cancer Treatment Package Enhanced,The Hindu,positive,Specialized oncology procedures added to covered treatments list
-2024,Ayushman Crosses 40 Crore Claim Milestones,Times of India,positive,Health insurance scheme processes record number of beneficiary claims
-2024,Audit Reveals 15 Percent Fraudulent Claims,Indian Express,negative,Biometric authentication mandated to curb fake hospitalizations
-2025,AI Diagnostics Piloted in Ayushman Hospitals,Economic Times,positive,Machine learning tools improve disease detection accuracy and speed
-2025,Digital Health Records for All Beneficiaries,Business Standard,positive,Blockchain-based medical history ensures data portability across providers
-2025,Scheme Faces 8000 Crore Budget Shortfall,The Hindu,negative,Surging demand outpaces allocated funding requiring mid-year revision
+year,headline,source,sentiment,impact_score
+2018,Worlds Largest Health Scheme Launched from Ranchi,PIB,positive,100
+2019,50 Lakh Hospital Admissions in First Year,Economic Times,positive,90
+2020,COVID Treatment Packages Added to Ayushman,The Hindu,positive,90
+2021,Ayushman Bharat Digital Mission Launched,PIB,positive,85
+2022,4 Crore Hospital Admissions Rs 50000 Crore Treatment,Business Standard,positive,90
+2023,97 Percent Cashless Transactions Achieved,Mint,positive,85
+2024,6 Crore Senior Citizens Added to Coverage,PIB,positive,95
+2024,37 Lakh ASHA Anganwadi Workers Covered,Indian Express,positive,85
+2025,9.84 Crore Hospital Admissions Universal Health Coverage,PIB,positive,95

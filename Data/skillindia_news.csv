@@ -1,34 +1,11 @@
-year,headline,source,sentiment,summary
-2015,PM Launches Skill India Mission,The Hindu,positive,Ambitious program to train 40 crore youth in job-ready skills by 2022
-2015,ITIs to Get Major Facelift,Economic Times,positive,Industrial Training Institutes modernization with private sector involvement
-2015,Skill Gap Analysis Reveals Major Deficits,Business Standard,negative,Study shows 70 percent engineering graduates unemployable in current form
-2016,Skill India Trains 3.5 Million in First Year,Times of India,positive,Program exceeds initial targets with focus on manufacturing sectors
-2016,Quality Concerns Over Skill Certification,Indian Express,negative,Industries complain trained candidates lack practical job readiness
-2016,International Partnerships for Skill Development,Economic Times,positive,Germany and Japan collaborate on vocational training programs
-2017,Sector Skill Councils Established,Business Standard,positive,Industry-specific training standards developed for 40 sectors
-2017,Placement Rates Improve to 52 Percent,The Hindu,positive,Better industry alignment shows in job conversion metrics
-2017,Rural Areas Lack Skill Training Access,Times of India,negative,Most training centers concentrated in urban areas leaving villages behind
-2018,Digital Skills Training Gets Priority,Indian Express,positive,Coding and data analytics courses added to curriculum
-2018,Apprenticeship Scheme Covers 5 Lakh Youth,Economic Times,positive,On-job training program shows strong industry participation
-2018,Dropout Rates High in Skill Programs,Business Standard,negative,Financial pressures force trainees to abandon courses midway
-2019,Skill India Crosses 10 Million Trainees,The Hindu,positive,Cumulative achievement shows growing scale of skilling initiative
-2019,Industry Demand Outpaces Supply,Times of India,negative,Shortage of trainers and infrastructure limits program expansion
-2019,World Skills Competition Success,Indian Express,positive,Indian contingent wins medals in international vocational skills contest
-2020,COVID Forces Online Training Pivot,Economic Times,negative,Lockdowns disrupt hands-on practical skill development activities
-2020,Digital Training Platform Launched,Business Standard,positive,E-learning portal enables remote skill certification courses
-2020,Job Market Collapse Hits Placements,The Hindu,negative,Economic crisis reduces placement rates to 45 percent
-2021,Skill Training Aids Post-Pandemic Recovery,Times of India,positive,Reskilling programs help workers transition to new sectors
-2021,Industry-Academia Collaboration Strengthens,Indian Express,positive,Companies set up captive training centers within universities
-2021,Women Participation Crosses 40 Percent,Economic Times,positive,Gender gap narrows in technical and vocational training programs
-2022,Green Jobs Training Introduced,Business Standard,positive,Solar installation and EV maintenance skills added to courses
-2022,Placement Rates Reach 64 Percent,The Hindu,positive,Improved curriculum design shows better job market outcomes
-2022,Regional Language Barriers Addressed,Times of India,positive,Training materials translated to 12 Indian languages
-2023,AI and Data Science Skills in Demand,Indian Express,positive,Technology sector training programs see enrollment surge
-2023,Skill India Reaches 15 Million Trainees,Economic Times,positive,Accelerated growth shows maturing workforce development ecosystem
-2023,Quality Assurance Mechanisms Introduced,Business Standard,positive,Third-party evaluation ensures training standard compliance
-2024,Advanced Manufacturing Skills Prioritized,The Hindu,positive,Robotics and automation training prepares for Industry 4.0
-2024,Semiconductor Workforce Development Begins,Times of India,positive,Specialized courses for chip design and fabrication launched
-2024,Migrant Workers Get Skill Upgrade Access,Indian Express,positive,Mobile training vans reach construction sites and informal sectors
-2025,Quantum Computing Courses Introduced,Economic Times,positive,Cutting-edge technology training positions India for future jobs
-2025,Skill India Crosses 70 Percent Placement Rate,Business Standard,positive,Two-decade high in job conversion validates program effectiveness
-2025,Lifelong Learning Platform Launched,The Hindu,positive,Continuous upskilling ecosystem enables career transitions across lifespan
+year,headline,source,sentiment,impact_score
+2015,Skill India Mission Launched on World Youth Skills Day,PIB,positive,95
+2016,PMKVY 2.0 Targets 1 Crore Youth Training,The Hindu,positive,85
+2017,38 Sector Skill Councils Align Training with Industry,Economic Times,positive,80
+2018,RPL Certifies 50 Lakh Informal Sector Workers,PIB,positive,85
+2019,Skill India International Centers Open in UAE Japan,Business Standard,positive,80
+2020,COVID Shifts Training Online - Digital Skill Platforms,Mint,positive,75
+2021,PMKVY 3.0 Adopts Demand-Driven Training Approach,PIB,positive,85
+2022,Skill India Digital Platform Serves 1 Crore Users,Economic Times,positive,80
+2023,AI ML Drone EV Courses Added to Curriculum,The Hindu,positive,85
+2025,1.6 Crore Trained 85 Lakh Placed - Mission Success,PIB,positive,90

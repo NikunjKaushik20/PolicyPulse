@@ -1,13 +1,13 @@
-year,allocated_crores,spent_crores,toilets_built_million,focus_area,villages_odf,waste_processed_tons
-2014,3500,2800,4.2,Campaign launch and household toilet construction,12000,150000
-2015,7500,6800,12.5,Rural sanitation drive and behavior change,45000,420000
-2016,11000,9900,22.8,ODF village certification and waste management,125000,850000
-2017,14000,12800,35.6,Urban sanitation and solid waste processing,245000,1450000
-2018,16500,15200,52.4,Plastic ban and segregation at source campaigns,385000,2180000
-2019,18000,16800,68.2,ODF Plus sustainability and wastewater treatment,560000,2950000
-2020,17500,15900,72.5,COVID sanitation and hygiene awareness,595000,3120000
-2021,19000,17500,76.8,Fecal sludge management and liquid waste,605000,3580000
-2022,20500,19100,80.1,Waste-to-energy and circular economy integration,612000,4120000
-2023,22000,20500,82.5,ODF Plus Plus certification and grey water reuse,618000,4680000
-2024,24000,22400,84.2,Plastic waste recycling and compost generation,622000,5250000
-2025,26000,24500,85.8,Zero waste cities and biodegradable material push,625000,5820000
+year,allocated_crores,toilets_built_lakh,odf_villages,coverage_percent,focus_area
+2014,3625,56,0,39,Mission launch October 2
+2015,6525,122,8546,48,Jan Andolan campaign
+2016,11300,213,65847,60,ODF districts begin
+2017,16248,288,185432,76,Behavior change focus
+2018,17843,401,428584,90,90% coverage achieved
+2019,12644,550,564658,98,ODF India declaration
+2020,9994,600,603175,100,Phase 2 ODF Plus launch
+2021,12000,870,603175,100,ODF sustainability focus
+2022,14000,1050,603175,100,2.96 lakh ODF Plus villages
+2023,15000,1120,603175,100,4.45 lakh ODF Plus villages
+2024,16000,1180,603175,100,GOBARDHAN expansion
+2025,16500,1204,603175,100,5.68 lakh ODF Plus villages

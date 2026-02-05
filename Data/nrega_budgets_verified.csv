@@ -1,0 +1,14 @@
+# Source: nrega.nic.in, Ministry of Rural Development, Government of India
+# Last Updated: 2026-02-05
+year,allocated_crores,spent_crores,person_days_million,households_million,source_url,notes
+2014,34000,32992,1664,39.4,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2015,34699,37341,2355,48.9,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2016,38500,47499,2357,51.1,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2017,48000,55166,2350,51.5,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2018,55000,61815,2677,52.6,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2019,60000,71002,2654,54.8,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2020,61500,111500,3892,74.9,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,COVID-enhanced allocation under Aatmanirbhar Bharat
+2021,73000,98468,3649,72.1,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2022,73000,89400,2997,61.2,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2023,60000,86000,2800,58.5,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,
+2024,86000,82000,2950,60.2,https://nrega.nic.in/MGNREGA_new/Nrega_home.aspx,

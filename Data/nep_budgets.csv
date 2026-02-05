@@ -1,7 +1,7 @@
-year,allocated_crores,spent_crores,schools_covered,focus_area,teachers_trained,digital_classrooms
-2020,5000,3200,15000,Policy formulation and pilot design,85000,12000
-2021,12000,9500,45000,Foundational literacy and numeracy mission,245000,38000
-2022,18000,15200,95000,Curriculum revision and assessment reforms,520000,82000
-2023,24000,21500,165000,Multidisciplinary education and skill integration,890000,145000
-2024,30000,27200,245000,Higher education reforms and credit system,1250000,225000
-2025,36000,33500,325000,Mother tongue instruction and multilingual approach,1680000,315000
+year,education_budget_crores,ger_higher_percent,digital_universities,vocational_schools,focus_area
+2020,99312,27.1,0,5000,NEP 2020 approval July
+2021,93224,28.4,15,10000,Implementation begins
+2022,104278,29.0,50,20000,5+3+3+4 structure
+2023,112899,30.5,100,40000,PM SHRI schools
+2024,120628,32.0,200,80000,Academic Bank of Credits
+2025,128650,34.0,350,150000,GER target 50% by 2035

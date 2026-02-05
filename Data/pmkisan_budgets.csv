@@ -1,9 +1,8 @@
-year,allocated_crores,spent_crores,beneficiaries_million,focus_area,installments_paid,amount_per_farmer
-2018,20000,12500,31.5,Pilot launch and farmer identification,1,2000
-2019,75000,68000,87.5,Nationwide rollout and Aadhaar linking,3,6000
-2020,75000,70500,100.8,COVID relief and digital payment expansion,3,6000
-2021,65000,61200,110.2,Database cleanup and duplicate removal,3,6000
-2022,68000,64500,116.5,E-KYC verification and fraud prevention,3,6000
-2023,60000,56800,110.8,Fiscal constraints and beneficiary verification,3,6000
-2024,70000,66500,118.2,Election year boost and arrear clearances,3,6000
-2025,75000,71000,121.5,AI validation and satellite land verification,3,6000
+year,allocated_crores,beneficiaries_crore,disbursed_crores,installments_released,focus_area
+2019,75000,8.0,17943,4,Scheme launch February 24
+2020,75000,10.5,41466,7,Extended to all farmers
+2021,65000,11.2,63869,10,Aadhaar mandatory
+2022,68000,10.48,90358,13,Peak beneficiaries
+2023,60000,8.12,125708,16,eKYC verification cleanup
+2024,60000,9.59,165000,18,Rs 3.45 lakh crore total
+2025,65000,10.07,187000,19,10 crore beneficiaries

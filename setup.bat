@@ -1,34 +1,79 @@
 @echo off
-echo Setting up PolicyPulse...
+echo ========================================
+echo PolicyPulse Setup
+echo ========================================
+echo.
 
+REM Check Python version
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Python not found. Please install Python 3.11+
+    exit /b 1
+)
 
-echo Installing dependencies...
+echo [1/6] Installing Python dependencies...
 pip install -r requirements.txt
+if errorlevel 1 (
+    echo ERROR: Failed to install dependencies
+    exit /b 1
+)
+
+echo Checking NumPy version for ChromaDB compatibility...
+pip install "numpy<2.0,>=1.26.0" --upgrade --no-deps
+if errorlevel 1 (
+    echo WARNING: NumPy version check failed
+)
 
 echo.
-echo Installing Tesseract OCR (required for image-to-text)...
-echo Please download and install Tesseract OCR manually from:
-echo   https://github.com/tesseract-ocr/tesseract
-echo After installation, add the Tesseract install directory (e.g., C:\Program Files\Tesseract-OCR) to your PATH environment variable.
-echo If already installed, you can ignore this message.
+echo [2/6] Creating environment file...
+if not exist .env (
+    copy .env.example .env
+    echo Created .env file. Edit it to add your API keys ^(optional^).
+) else (
+    echo .env already exists, skipping.
+)
+
 echo.
+echo [3/6] Creating ChromaDB data directory...
+if not exist chromadb_data (
+    mkdir chromadb_data
+    echo Created chromadb_data directory.
+) else (
+    echo chromadb_data already exists.
+)
 
-echo Starting Qdrant in Docker...
-docker run -d -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest
+echo.
+echo [4/6] Initializing ChromaDB...
+python -c "from src.chromadb_setup import get_client; get_client(); print('ChromaDB initialized!')"
+if errorlevel 1 (
+    echo ERROR: ChromaDB initialization failed
+    exit /b 1
+)
 
-echo Waiting for Qdrant to start...
-timeout /t 5 /nobreak
+echo.
+echo [5/6] Running data migration ^(if Qdrant data exists^)...
+python migrate_to_chromadb.py
 
-echo Resetting and ingesting database...
-python cli.py reset-db
+echo.
+echo [6/6] Ingesting policy data...
 python cli.py ingest-all
+if errorlevel 1 (
+    echo WARNING: Data ingestion had some issues. Check logs.
+)
 
 echo.
-echo Setup complete!
+echo ========================================
+echo Setup Complete! ^(No Docker needed^) ✅
+echo ========================================
 echo.
-echo In a new terminal, run:
-echo   streamlit run app.py
+echo Next steps:
+echo   1. ^(Optional^) Edit .env to add API keys for enhanced features
+echo   2. Start the server: python start.py
+echo   3. Open browser: http://localhost:8000
 echo.
-echo API server will start now:
-echo   uvicorn src.api:app --reload
-uvicorn src.api:app --reload
+echo API Keys ^(all optional, system works without them^):
+echo   - Google Cloud Translation: https://console.cloud.google.com/
+echo   - Gemini API: https://makersuite.google.com/app/apikey
+echo   - Twilio: https://www.twilio.com/console
+echo.
+pause

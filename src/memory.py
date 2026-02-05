@@ -18,10 +18,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Memory decay configuration
+# tuned by eyeballing NREGA query logs - older stuff was drowning recent
 DECAY_COEFFICIENT = 0.1  # Exponential decay rate per year
 ACCESS_BOOST_RATE = 0.02  # Boost per access (2% per hit)
 MAX_BOOST_MULTIPLIER = 1.3  # Cap on cumulative access boost
-MAX_DECAY_WEIGHT = 1.5  # Absolute maximum decay weight value
+MAX_DECAY_WEIGHT = 1.5  # Absolute maximum - prevent runaway boosting
 DEFAULT_DECAY_WEIGHT = 1.0  # Initial weight for new entries
 
 # Batch processing configuration

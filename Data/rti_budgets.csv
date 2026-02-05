@@ -1,22 +1,14 @@
-year,allocated_crores,spent_crores,applications_million,focus_area,appeals_filed,information_officers
-2005,50,35,0.2,Act implementation and awareness campaigns,5000,12000
-2006,120,95,0.5,Information Commission setup in states,18000,28000
-2007,180,150,1.2,Training of public information officers,45000,52000
-2008,220,195,2.3,Online filing portals and digitization,89000,78000
-2009,280,245,3.8,Transparency drive and suo-moto disclosure,145000,95000
-2010,320,290,5.2,Proactive disclosure norms strengthening,198000,112000
-2011,350,315,6.8,Capacity building and backlog clearance,267000,125000
-2012,380,340,8.5,E-governance integration and tracking systems,342000,138000
-2013,400,365,10.2,Whistleblower protection framework,425000,148000
-2014,420,385,11.8,Penalty enforcement and compliance monitoring,512000,155000
-2015,450,410,13.5,Mobile apps and SMS-based status tracking,608000,162000
-2016,480,440,15.2,RTI Online portals nationwide rollout,715000,168000
-2017,510,475,16.8,Deemed disclosure and time-bound responses,834000,175000
-2018,540,505,18.4,Aadhaar integration and identity verification,965000,182000
-2019,570,535,19.9,Amendment Act implementation and restructuring,1098000,188000
-2020,550,490,17.2,COVID disruption and online hearing systems,1145000,190000
-2021,600,560,21.5,Digital hearing platforms and virtual appeals,1268000,195000
-2022,650,610,23.8,AI-assisted response generation pilots,1402000,202000
-2023,700,665,25.6,Proactive disclosure automation systems,1548000,208000
-2024,750,715,27.2,Blockchain for immutable record keeping,1705000,215000
-2025,800,765,28.9,Chatbot assistance and natural language queries,1878000,222000
+year,applications_lakh,disposed_lakh,appeals,penalties_imposed,focus_area
+2005,5,4,5000,100,RTI Act enacted October 12
+2006,15,12,15000,200,First full year operation
+2007,25,20,25000,350,CIC capacity building
+2008,35,30,35000,500,State ICs strengthened
+2009,45,38,45000,650,Pro-active disclosure push
+2010,55,48,55000,800,55 lakh applications
+2012,75,65,70000,1000,E-filing introduced
+2015,95,85,85000,1500,Digital transformation
+2018,125,110,100000,2200,125 lakh applications
+2020,95,85,75000,1800,COVID impact
+2022,120,108,95000,2200,Recovery and growth
+2024,145,130,115000,2600,Supreme Court rulings
+2025,155,140,125000,2800,Digital RTI expansion

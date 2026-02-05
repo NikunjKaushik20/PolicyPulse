@@ -1,23 +1,34 @@
-Year 2018:
-PM-KISAN was announced in the Interim Budget providing direct income support of Rs 6,000 annually to small farmers. The scheme aimed to benefit 12 crore farm families by transferring money directly to bank accounts. Initial implementation faced challenges in farmer database creation due to incomplete land record digitization. The universal basic income concept for agriculture sector promised relief from chronic rural distress. However, tenant farmers and landless cultivators remained excluded from the scheme's benefits.
+=== PM-KISAN February 2019 Launch ===
+Source: pib.gov.in, Ministry of Agriculture
 
-Year 2019:
-The scheme was expanded to cover all farmers removing the initial land-holding size restrictions. First installment was credited to 3 crore farmers demonstrating capability for large-scale direct benefit transfer. Aadhaar linking was made mandatory to prevent duplicate claims and ensure beneficiary authentication. Database audits revealed ghost beneficiaries and fake entries requiring systematic cleanup. Over 87 million farmers received Rs 6,000 annual support transforming rural economy liquidity. However, tenant farmers' exclusion remained contentious political and equity issue.
+Pradhan Mantri Kisan Samman Nidhi launched on February 24, 2019 from Gorakhpur, Uttar Pradesh. Provides Rs 6,000 per year to farmer families in three equal installments of Rs 2,000 via Direct Benefit Transfer. Initially for small and marginal farmers (<2 hectares landholding).
 
-Year 2020:
-PM-KISAN provided critical COVID-19 relief with cash transfers cushioning rural economy during lockdowns. Government frontloaded advance installment release to boost rural demand during economic crisis. Beneficiary count crossed 10 crore as expanded coverage reached majority of farming households. The scheme demonstrated its value as automatic stabilizer during economic shocks. Direct bank transfers ensured money reached farmers without leakage or intermediary exploitation.
+=== PM-KISAN 2019 Extension ===
+Source: pib.gov.in
 
-Year 2021:
-Database cleanup removed over 3 crore duplicate and ineligible entries improving targeting accuracy. E-KYC biometric verification was made compulsory at payment centers to prevent fraudulent claims. Beneficiaries stabilized at around 11 crore farmers reflecting genuine cultivator population post-cleanup. Technology-driven verification systems significantly reduced ghost beneficiaries and fraudulent claims. The scheme had injected massive liquidity into rural areas supporting agricultural investment.
+Scheme extended to all farmer families irrespective of landholding size from June 2019. Over 14 crore farmer families became eligible. First installment reached 3 crore farmers in launch week itself. Rs 17,943 crore disbursed in 4th installment.
 
-Year 2022:
-Cumulative payout crossed Rs 2 lakh crore after four years of operation showing program scale. AI-powered fraud detection algorithms identified income taxpayers and government employees claiming benefits illegally. Farmers demanded increase in annual amount citing inflation erosion of Rs 6,000 real value. The scheme provided predictable income support helping farmers plan agricultural investments. However, questions arose about long-term fiscal sustainability of the program.
+=== PM-KISAN 2020 COVID Support ===
+Source: pmkisan.gov.in
 
-Year 2023:
-Budget allocation was reduced to Rs 60,000 crore reflecting fiscal consolidation priorities and constraints. Intensive beneficiary verification drives included physical inspections and land record matching for eligibility. Recovery actions collected Rs 500 crore from ineligible recipients deterring fraudulent claims through penalties. The scheme faced criticism that amount was inadequate relative to input cost inflation. Database integrity improved significantly through multiple verification layers and technology integration.
+During COVID lockdown, Rs 2,000 installment advanced to April 2020. 10.5 crore farmers received front-loaded payment. Total disbursement reached Rs 65,000 crore in 2019-20. Aadhaar-based verification made mandatory.
 
-Year 2024:
-Election year saw timely release of all three annual installments without any processing delays. Marginal beneficiary increase to 11.8 crore through addition of newly verified genuine farmers. Appeals process reinstated wrongly excluded farmers with retrospective backpay for missed installments. The political economy of direct cash transfers became evident in election year implementation. PM-KISAN had become electoral talking point demonstrating its political salience.
+=== PM-KISAN 2021 Scale ===
+Source: pib.gov.in
 
-Year 2025:
-Satellite remote sensing technology was piloted for validating actual cultivation status of beneficiaries. AI validation systems reduced beneficiary approval and payment processing times significantly. The scheme completed 7 years establishing itself as key component of rural income support architecture. Over 12 crore farmers received support though real value had eroded due to inflation. Calls intensified for increasing the annual amount to maintain purchasing power parity.
+11.2 crore beneficiaries enrolled. Cumulative disbursement crossed Rs 1 lakh crore. Digital land record verification initiated in 28 states. PM-KISAN Mobile App launched with 3 crore downloads.
+
+=== PM-KISAN 2022 Peak and Cleanup ===
+Source: pmkisan.gov.in Dashboard
+
+11th installment saw peak of 10.48 crore beneficiaries. Stringent eKYC verification then implemented. 2.3 crore duplicate/ineligible accounts identified and blocked. Beneficiary database cleaned up to 8.57 crore genuine farmers.
+
+=== PM-KISAN 2023 Recovery ===
+Source: pib.gov.in
+
+Post-cleanup, beneficiary count recovered to 9.5+ crore. Digital land record verification completed in most states. Integration with soil health cards and crop insurance. Total disbursement crossed Rs 2 lakh crore.
+
+=== PM-KISAN 2024-2025 Current ===
+Source: pmkisan.gov.in Dashboard January 2026
+
+19th installment released to 10.07 crore beneficiaries. Rs 22,000 crore disbursed per installment. Cumulative disbursement: Rs 3.75 lakh crore since inception. Women beneficiaries reached 2.41 crore. 100% DBT through Aadhaar-linked accounts.

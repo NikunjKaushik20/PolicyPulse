@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Assistant - PolicyPulse</title>
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">
+        <span>🔍</span>
+        <span>PolicyPulse</span>
+      </div>
+      <nav class="nav">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/search.html" class="nav-link">Search</a>
+        <a href="/eligibility.html" class="nav-link">Eligibility</a>
+        <a href="/voice.html" class="nav-link active">Voice</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding: 2rem 1.5rem; max-width: 800px;">
+    <div class="fade-in">
+      <h1 class="text-center mb-2">🎤 Voice Assistant</h1>
+      <p class="text-center mb-4" style="color: var(--text-secondary);">
+        Speak your question. Listen to the answer. Available in 10+ languages.
+      </p>
+
+      <!-- Voice Interface Card -->
+      <div class="card text-center mb-4">
+        <div class="input-group mb-3">
+          <label class="input-label">Select Language / भाषा चुनें</label>
+          <select id="voice-language" class="select">
+            <option value="hi">Hindi (हिंदी)</option>
+            <option value="en">English</option>
+            <option value="ta">Tamil (தமிழ்)</option>
+            <option value="te">Telugu (తెలుగు)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="mr">Marathi (मराठी)</option>
+          </select>
+        </div>
+
+        <!-- Microphone Button -->
+        <div id="mic-container" style="margin: 2rem 0;">
+          <button id="mic-btn" class="btn-icon" style="width: 120px; height: 120px; font-size: 3rem; background: var(--gradient-primary); color: white; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);">
+            🎤
+          </button>
+        </div>
+
+        <p id="status-text" style="font-size: 1.25rem; color: var(--text-secondary); margin: 1rem 0;">
+          Tap the microphone to start
+        </p>
+
+        <div id="transcript-box" class="card" style="display: none; margin-top: 1.5rem; background: var(--bg-primary); text-align: left;">
+          <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem; text-transform: uppercase; color: var(--text-tertiary);">You said:</h4>
+          <p id="transcript-text" style="font-size: 1.125rem; color: var(--text-primary);"></p>
+        </div>
+      </div>
+
+      <!-- Browser Support Check -->
+      <div id="browser-warning" class="card" style="display: none; background: var(--warning); color: white;">
+        <h4>⚠️ Browser Not Supported</h4>
+        <p>Voice recognition requires Chrome, Edge, or Safari. Please use a supported browser.</p>
+      </div>
+
+      <!-- Answer Section -->
+      <div id="answer-container"></div>
+
+      <!-- Examples -->
+      <div class="card" style="background: var(--bg-secondary);">
+        <h3 class="mb-2">💡 Try Asking:</h3>
+        <ul style="color: var(--text-secondary); line-height: 2;">
+          <li onclick="askExample('NREGA क्या है?')">NREGA क्या है? (What is NREGA?)</li>
+          <li onclick="askExample('PM-KISAN के लिए कैसे आवेदन करें?')">PM-KISAN के लिए कैसे आवेदन करें? (How to apply for PM-KISAN?)</li>
+          <li onclick="askExample('क्या मैं Ayushman Bharat के लिए पात्र हूं?')">क्या मैं Ayushman Bharat के लिए पात्र हूं? (Am I eligible for Ayushman Bharat?)</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/static/js/theme-toggle.js"></script>
+  <script src="/static/js/api-client.js"></script>
+  <script src="/static/js/voice-api.js"></script>
+  <script>
+    const micBtn = document.getElementById('mic-btn');
+    const statusText = document.getElementById('status-text');
+    const transcriptBox = document.getElementById('transcript-box');
+    const transcriptText = document.getElementById('transcript-text');
+    const answerContainer = document.getElementById('answer-container');
+    const voiceLanguage = document.getElementById('voice-language');
+    const browserWarning = document.getElementById('browser-warning');
+
+    let isListening = false;
+
+    // Check browser support
+    if (!voiceAPI.isSpeechRecognitionSupported()) {
+      browserWarning.style.display = 'block';
+      micBtn.disabled = true;
+    }
+
+    // Start/stop listening
+    micBtn.addEventListener('click', () => {
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    });
+
+    function startListening() {
+      const lang = voiceLanguage.value;
+      const recogLang = voiceAPI.getRecognitionLanguage(lang);
+
+      statusText.textContent = '🎧 Listening... speak now';
+      micBtn.style.background = 'var(--error)';
+      micBtn.style.animation = 'pulse 1.5s infinite';
+      isListening = true;
+
+      voiceAPI.startListening(
+        recogLang,
+        handleTranscript,
+        handleError
+      );
+    }
+
+    function stopListening() {
+      voiceAPI.stopListening();
+      statusText.textContent = 'Processing...';
+      micBtn.style.background = 'var(--gradient-primary)';
+      micBtn.style.animation = 'none';
+      isListening = false;
+    }
+
+    async function handleTranscript(transcript) {
+      // Show transcript
+      transcriptText.textContent = transcript;
+      transcriptBox.style.display = 'block';
+      
+      statusText.textContent = '🔍 Searching...';
+
+      try {
+        const lang = voiceLanguage.value;
+        const response = await apiClient.queryPolicy(transcript, lang);
+        
+        // Display answer
+        displayAnswer(response);
+        
+        // Play audio response
+        statusText.textContent = '🔊 Playing answer...';
+        const audioBlob = await apiClient.getTextToSpeech(response.final_answer, lang);
+        apiClient.playAudio(audioBlob);
+        
+        setTimeout(() => {
+          statusText.textContent = 'Tap the microphone to ask another question';
+        }, 2000);
+        
+      } catch (error) {
+        handleError(error.message);
+      }
+    }
+
+    function handleError(error) {
+      statusText.textContent = '❌ Error: ' + error;
+      statusText.style.color = 'var(--error)';
+      micBtn.style.background = 'var(--gradient-primary)';
+      micBtn.style.animation = 'none';
+      isListening = false;
+
+      setTimeout(() => {
+        statusText.style.color = 'var(--text-secondary)';
+        statusText.textContent = 'Tap the microphone to try again';
+      }, 3000);
+    }
+
+    function displayAnswer(data) {
+      answerContainer.innerHTML = `
+        <div class="card card-gradient mb-3 fade-in">
+          <h3>💡 Answer</h3>
+          <p style="font-size: 1.125rem; line-height: 1.8; color: white;">
+            ${data.final_answer}
+          </p>
+          <div class="flex gap-2 mt-3">
+            <span class="badge" style="background: rgba(255,255,255,0.3);">
+              Confidence: ${Math.round(data.confidence_score * 100)}%
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Example click handler
+    async function askExample(question) {
+      transcriptText.textContent = question;
+      transcriptBox.style.display = 'block';
+      statusText.textContent = '🔍 Searching...';
+      
+      try {
+        const lang = voiceLanguage.value;
+        const response = await apiClient.queryPolicy(question, lang);
+        displayAnswer(response);
+        
+        statusText.textContent = '🔊 Playing answer...';
+        const audioBlob = await apiClient.getTextToSpeech(response.final_answer, lang);
+        apiClient.playAudio(audioBlob);
+        
+        setTimeout(() => {
+          statusText.textContent = 'Tap the microphone to ask another question';
+        }, 2000);
+      } catch (error) {
+        handleError(error.message);
+      }
+    }
+
+    // Add pulse animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

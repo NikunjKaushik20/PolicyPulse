@@ -1,12 +1,12 @@
-year,allocated_crores,spent_crores,cities_count,focus_area,projects_completed,smart_infra_coverage
-2015,2000,500,20,Pilot city selection and planning,0,5
-2016,6000,3200,60,Infrastructure development and technology integration,45,12
-2017,10000,7500,90,Smart transport and water management systems,180,22
-2018,12000,9800,99,IoT sensors and command control centers,420,35
-2019,14000,11500,100,Renewable energy and waste management,720,48
-2020,13000,10200,100,COVID smart health monitoring systems,950,55
-2021,15000,12800,100,Digital governance and citizen services,1280,62
-2022,16000,14100,100,EV charging and green mobility infrastructure,1650,70
-2023,17000,15200,100,AI traffic management and pollution control,2100,77
-2024,18500,16800,100,Climate resilience and disaster management tech,2580,83
-2025,20000,18500,100,Net zero carbon and circular economy systems,3150,89
+year,allocated_crores,cities,projects_tendered,projects_completed,focus_area
+2015,4800,20,100,0,Smart Cities Mission launch
+2016,7296,60,800,50,Selection rounds 2-3
+2017,9860,90,2500,300,SCCs operational
+2018,6169,99,4500,800,ICCC implementation
+2019,6450,100,6000,1500,All 100 cities selected
+2020,6450,100,6500,2500,Pandemic management
+2021,6450,100,7500,4000,Digital services
+2022,7500,100,8000,5500,5500 projects complete
+2023,8000,100,8200,7000,Rs 1.9 lakh cr investment
+2024,8000,100,8500,8200,Extended to 2027
+2025,8000,100,8700,9000,9000 projects complete

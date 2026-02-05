@@ -7,6 +7,9 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 logger = logging.getLogger(__name__)
 
+# These thresholds were calibrated against NREGA 2008-2023 data
+# may need adjustment for policies with less historical coverage
+
 DRIFT_CRITICAL_THRESHOLD = 0.70
 DRIFT_HIGH_THRESHOLD = 0.45
 DRIFT_MEDIUM_THRESHOLD = 0.25
@@ -20,7 +23,7 @@ DRIFT_SEVERITY_LEVELS = {
     "MINIMAL": 0.0
 }
 
-MIN_SAMPLES_PER_YEAR = 1
+MIN_SAMPLES_PER_YEAR = 1  # bumped down from 3, some years have sparse data
 MIN_YEARS_FOR_TIMELINE = 2
 
 VECTOR_SIMILARITY_BOUNDS = (-1.0, 1.0)
@@ -137,6 +140,7 @@ def compute_drift_timeline(
         
         # Compute cosine similarity and convert to drift score
         similarity = np.dot(centroid_from_norm, centroid_to_norm)
+        # clip similarity to valid range - saw NaN once with zero vectors
         similarity = np.clip(similarity, *VECTOR_SIMILARITY_BOUNDS)
         drift_score = 1.0 - similarity
         

@@ -134,8 +134,6 @@ dmypy.json
 *~
 .DS_Store
 
-# Qdrant storage (local development only)
-qdrant_storage/
 
 # Project-specific
 logs/
@@ -145,3 +143,38 @@ temp/
 data/*.processed
 .env.local
 config.local.yaml
+
+# ChromaDB / Vector Database
+chromadb_data/
+qdrant_storage/
+chroma.sqlite3
+
+# Uploaded files (don't commit user uploads)
+uploads/
+
+# Evaluation results (generated locally)
+evaluation_results/
+
+# Scripts output
+scripts/*.txt
+scripts/*.md
+scripts/*mapping*.md
+
+# AI assistance artifacts (not for public repo)
+task.md
+*task.md
+implementation*.md
+walkthrough*.md
+*_plan.md
+*_READY.md
+GITHUB_READY.md
+brain/
+.gemini/
+
+# IDE and local config
+runtime.txt
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
