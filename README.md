@@ -2,6 +2,9 @@
 
 A semantic retrieval system for Indian government policy data. Built during the AI for Community Impact hackathon to solve a real problem: citizens can't easily find which schemes they're eligible for, what the current rules are, or how policies have changed over time.
 
+### 🚀 Live Demo: **[http://64.227.174.109:8000](http://64.227.174.109:8000)**
+> **Note:** Hosted on DigitalOcean (HTTP). Please ignore browser "Not Secure" warnings; it is safe for evaluation.
+
 ## Table of Contents
 1. [The Problem](#the-problem-we-observed)
 2. [Solution & Impact](#why-policypulse-solves-this)
@@ -257,6 +260,7 @@ chmod +x setup.sh
 python start.py
 # Open http://localhost:8000
 ```
+
 
 **Development mode** (for editing frontend code with hot reload):
 ```bash

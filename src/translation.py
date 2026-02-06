@@ -68,6 +68,27 @@ def translate_text(text: str, target_lang: str = 'hi', source_lang: str = 'en') 
         return text
     
     try:
+        # Check if Google Cloud Translation Key is present
+        google_key = os.getenv("GOOGLE_CLOUD_TRANSLATE_KEY")
+        
+        # If no Google Key, try Gemini (LLM) Translation for better context handling
+        if not google_key or not google_key.strip():
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if gemini_key:
+                try:
+                    import google.generativeai as genai
+                    genai.configure(api_key=gemini_key)
+                    # Use gemini-2.5-flash (Confirmed Working)
+                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    
+                    # Direct translation prompt
+                    prompt = f"Translate the following text to {target_lang} (language code). Only return the translated text, no explanations.\n\nText: {text}"
+                    response = model.generate_content(prompt)
+                    if response.text:
+                        return response.text.strip()
+                except Exception as g_err:
+                    logger.warning(f"Gemini translation failed, falling back to deep-translator: {g_err}")
+
         # Protect URLs from translation
         # Replace URLs with placeholders like ||URL1||
         urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
