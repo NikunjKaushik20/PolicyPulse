@@ -126,9 +126,34 @@ def format_sms_response(response_data: Dict[str, Any], max_length: int = 1600) -
         if "final_answer" in response_data:
             answer = response_data["final_answer"]
             
-            # Truncate and add "..." if too long
+            # Clean Markdown for WhatsApp
+            # 1. Start with basic cleanup
+            answer = answer.replace("### ", "").replace("## ", "").replace("**", "*")
+            
+            # 2. Fix Links: [Link](url) -> url
+            import re
+            answer = re.sub(r'\[(.*?)\]\((.*?)\)', r'\2', answer)
+            
+            # Append Recommendations
+            if "recommendations" in response_data and response_data["recommendations"]:
+                answer += "\n\n💡 *Suggested Policies:*\n"
+                for rec in response_data["recommendations"][:3]:
+                    name = rec.get("policy_name", rec.get("policy_id", "Policy"))
+                    answer += f"• {name}\n"
+
+            # Append sources/links if available
+            if "sources" in response_data and response_data["sources"]:
+                answer += "\n🔗 *Links:*\n"
+                for source in response_data["sources"][:2]:
+                     url = source.get("metadata", {}).get("source", "policypulse.com")
+                     if not url.startswith("http"): url = "policypulse.com"
+                     # Avoid duplicates if link is already in text
+                     if url not in answer:
+                        answer += f"• {url}\n"
+            
+            # Truncate
             if len(answer) > max_length - 50:
-                answer = answer[:max_length-50] + "...\n\nFor full answer, visit: policypulse.com"
+                answer = answer[:max_length-50] + "...\n\nFull info: policypulse.com"
             
             return answer
         

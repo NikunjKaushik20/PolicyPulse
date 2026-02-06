@@ -186,10 +186,12 @@ def synthesize_answer(
     # Trigger eligibility check if:
     # 1. Explicitly asked ("suggest")
     # 2. Answering a prompt
-    # 3. Query contains rich demographics (implying "for me")
+    # 3. Query contains rich demographics (implying "for me") -> UNLESS it's a direct "What is" question
     has_rich_demographics = len(demographics) >= 2 or 'occupation' in demographics
     
-    if (is_suggestion or is_answering_prompt or has_rich_demographics) and demographics:
+    skip_eligibility = is_what_is or is_budget or is_how_to
+    
+    if (is_suggestion or is_answering_prompt or (has_rich_demographics and not skip_eligibility)) and demographics:
         from .eligibility import check_eligibility  # Lazy import to avoid circular dep issues
         
         # Check if occupation is missing (skip check for minors)

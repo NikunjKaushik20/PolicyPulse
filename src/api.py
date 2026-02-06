@@ -38,6 +38,8 @@ from .document_checker import process_document, check_scheme_requirements
 from .performance import get_performance_stats, log_query_performance
 from .language_detection import detect_language, get_language_name
 from .query_processor import process_query, extract_demographics
+from . import sms_bot
+from fastapi import Form, Response
 
 # NEW: Auth & DB
 from .db import get_db
@@ -593,4 +595,89 @@ async def root():
         return FileResponse("static/index.html")
     except Exception:
         return HTMLResponse("<h1>PolicyPulse API v2.1</h1><p>Auth & Context Aware (Static files not found)</p>")
+
+
+# ===== Twilio SMS Webhook =====
+
+@app.post("/sms")
+async def reply_sms(Body: str = Form(...), From: str = Form(...)):
+    """
+    Handle incoming SMS/WhatsApp from Twilio.
+    Returns TwiML response.
+    """
+    try:
+        logger.info(f"SMS received from {From}: {Body}")
+        
+        # 1. Parse Intent
+        parsed = sms_bot.parse_sms_query(Body)
+        intent = parsed.get("intent")
+        response_data = {}
+        
+        if intent == "eligibility":
+            # Basic eligibility stub (could be enhanced later)
+            policy = parsed.get("policy")
+            if policy:
+                 response_data = {"final_answer": f"To check eligibility for {policy}, please visit policypulse.com/check. Required: Age, Income, Citizenship."}
+            else:
+                 response_data = {"final_answer": "Please specify a policy (e.g., 'NREGA eligibility')."}
+
+        else: # "details", "query", "unknown"
+            # Use the FULL query pipeline for best results
+            query = parsed.get("question", Body)
+            if intent == "details" and parsed.get("policy"):
+                query = f"What is {parsed.get('policy')}?"
+
+            # 1. Detect Language
+            # Heuristic: If query starts with common English phrases, force 'en'
+            # (Prevents "what is" being treated as Hindi/other and translated weirdly)
+            common_en_starters = ["what is", "how to", "suggest", "tell me", "check", "am i"]
+            if any(query.lower().startswith(s) for s in common_en_starters):
+                 detected_lang = 'en'
+            else:
+                 detected_lang, _ = detect_language(query)
+            
+            search_query = query
+            
+            # 2. Translate Input
+            if detected_lang != 'en':
+                search_query = translate_text(query, target_lang='en', source_lang=detected_lang)
+            
+            # 3. Process Query (Extract "19", "male", etc.)
+            query_info = process_query(search_query, original_query=query)
+            
+            # 4. Search Vectors
+            results = query_documents(
+                query_text=search_query, 
+                n_results=3,
+                where=query_info.get("filter")
+            )
+            
+            # 5. Generate Reasoning (With Demographics Context)
+            context_payload = query_info.copy()
+            # Pass extracted demographics to reasoning engine to enable logic like "for male student"
+            reasoning = generate_reasoning_trace(
+                query=search_query, 
+                retrieved_results=results,
+                context=context_payload 
+            )
+            
+            # 6. Translate Output
+            if detected_lang != 'en':
+                reasoning = translate_response(reasoning, detected_lang)
+                
+            response_data = reasoning
+
+        # 3. Format Response (Text constraints)
+        reply_text = sms_bot.format_sms_response(response_data)
+        
+        # 4. Return TwiML
+        xml_response = f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>{reply_text}</Message></Response>'
+        return Response(content=xml_response, media_type="application/xml")
+        
+    except Exception as e:
+        logger.error(f"SMS processing failed: {e}")
+        import traceback
+        traceback.print_exc()
+        error_response = '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Error processing request.</Message></Response>'
+        return Response(content=error_response, media_type="application/xml")
 
