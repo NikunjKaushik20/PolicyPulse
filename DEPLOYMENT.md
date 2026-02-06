@@ -4,6 +4,8 @@ This guide documents your **LIVE** deployment on DigitalOcean.
 **Public URL:** `http://64.227.174.109:8000`
 **Server IP:** `64.227.174.109`
 
+> **Note:** To enable microphone access on this HTTP URL, see [Enabling Microphone](#enabling-microphone-on-http).
+
 ---
 
 ## 1. Accessing the Server (SSH)
@@ -85,6 +87,13 @@ systemctl restart policypulse
 ### "AttributeError: bcrypt"
 *   **Cause**: `passlib` incompatibility with Python 3.12.
 *   **Fix**: Switched to `argon2` hashing in `src/auth.py`.
+
+### Enabling Microphone on HTTP
+Browsers block microphone access on non-HTTPS sites by default. To fix this:
+1.  Open `chrome://flags/#unsafely-treat-insecure-origin-as-secure` in Chrome/Edge.
+2.  Select **Enabled** from the dropdown.
+3.  Enter `http://64.227.174.109:8000` in the text box.
+4.  Click **Relaunch**.
 
 ---
 

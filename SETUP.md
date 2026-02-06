@@ -165,6 +165,8 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 The backend serves the pre-built React frontend from `static/` (copied from `frontend/dist/`).
 
+> **Microphone Note:** on `http://localhost`, mics work by default. On a remote HTTP server (like DigitalOcean), you must enable `chrome://flags/#unsafely-treat-insecure-origin-as-secure` to use voice features.
+
 ---
 
 ### Development Mode
