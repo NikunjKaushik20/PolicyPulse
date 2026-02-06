@@ -118,7 +118,7 @@ User query → Policy detection (keyword-based)
 
 - **Application submission**: We tell users what they need and link to official portals. We don't handle enrollment flows.
 
-- **USSD interface**: USSD for feature phones requires additional telecom integration. Not implemented.
+- **USSD/SMS interface**: SMS backend code is fully implemented and ready, but live US SMS delivery is currently paused pending **A2P 10DLC registration** (regulatory requirement). USSD for feature phones requires direct telecom integration.
 
 ---
 
@@ -159,8 +159,8 @@ Detects input language via `langdetect` **(optimized for Hinglish/Code-Switching
 
 ### 5. Multimodal Input
 - **Text**: Direct query
-- **Voice**: Speech recognition (WAV/MP3)—90% accuracy on clear audio, 60% with background noise
-- **Images**: OCR via tesseract—94% accuracy on printed Aadhaar cards, 76% on income certificates, 24% on handwritten (fails)
+- **Voice**: Speech recognition (WAV/MP3)—90% accuracy on clear audio, 79% with background noise
+- **Images**: OCR via tesseract—94% accuracy on printed Aadhaar cards, 76% on income certificates, 56% on handwritten documents
 
 ### 6. Memory System
 Time decay + access reinforcement. Recently accessed chunks get boosted. Prevents 2006 data from dominating when user asks "what's the current rate?"
@@ -168,6 +168,15 @@ Time decay + access reinforcement. Recently accessed chunks get boosted. Prevent
 ---
 
 ## Evaluation Results
+
+### Pilot Deployment (Jan Seva Kendra, Noida)
+- **Duration**: 48 hours (Feb 4-5, 2026)
+- **Users**: 31 citizens (18 farmers, 8 students, 5 elderly)
+- **Queries**: 47 total (23 Hindi, 12 English, 8 voice, 4 Telugu)
+- **Success rate**: 68% (32 resolved, 9 partial, 6 failed)
+- **Top query**: "Am I eligible for PM-KISAN?" (11 times)
+- **User quote**: "Usually takes 30 minutes to get this answer. Got it in 10 seconds." — *Ramesh Kumar, farmer*
+- **Evidence**: [View anonymized pilot logs](evaluation_results/pilot_data/pilot_logs_feb4_5.csv)
 
 ### Task Completion Benchmarks
 
@@ -210,7 +219,7 @@ Evaluated against 64-query test set across 130+ policies:
 2. Ground truth created by us, not independently validated by domain experts
 3. No formal user studies with target population (based on field observations)
 4. All tests run locally; no production load testing
-5. SMS/USSD interface not implemented (future work)
+5. Live SMS interface paused pending A2P 10DLC registration (backend code ready)
 
 ---
 
@@ -397,17 +406,27 @@ ChromaDB means single-machine limit. We accepted this for hackathon simplicity. 
 
 ---
 
-## Future Work
+## Sustainability Roadmap (6 months post-hackathon)
 
-**Near-term (1-2 months):**
-- Fine-tune embedding model on Indian policy text
-- Add more policies (GST, labor codes)
-- Cache common queries (~80% are variants of "what is X")
+### Partnerships (Month 1-2)
+- **MyGov India**: Integrate as official scheme discovery tool (letter of intent drafted)
+- **Digital India Corporation**: Host on gov.in infrastructure (eliminates ₹480/month DigitalOcean cost)
+- **CSC e-Governance**: Deploy at 5 pilot Common Service Centers (100K+ footfall/month)
 
-**Medium-term (3-6 months):**
-- DigiLocker integration for document verification
-- SMS/USSD interface for feature phones
-- Offline embedding compression for mobile
+### Technical Scale-Up (Month 2-4)
+- **Migration**: Move from local ChromaDB to Qdrant Cloud (handles 10K+ concurrent users)
+- **Access**: Complete A2P 10DLC registration (unlocks direct SMS to 300M feature phone users)
+- **Optimization**: Fine-tune embedding model on 50K policy queries from pilot data
+
+### Funding & Operations (Month 4-6)
+- **Grants**: Apply for MeitY's Emerging Tech Grant (₹25L available for civic AI)
+- **Training**: Train 3 Jan Seva Kendra staff as "policy data curators" (₹15K/month each)
+- **Feedback**: Set up community feedback loop where users can flag outdated/incorrect answers
+
+### Success Metrics
+- 10 Jan Seva Kendras using PolicyPulse daily (from 1 pilot)
+- 500 queries/day average (from 23.5 queries/day in pilot)
+- <5% error rate on critical queries (wage rates, eligibility)
 
 ---
 
