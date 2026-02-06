@@ -227,7 +227,6 @@ ELIGIBILITY_RULES = {
         "application_link": "https://nrega.nic.in/",
         "benefits": "100 days employment at ₹255/day (2024)"
     },
-    # ... 10 policies
 }
 ```
 
