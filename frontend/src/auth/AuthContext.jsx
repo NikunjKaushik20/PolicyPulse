@@ -78,8 +78,25 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const loginAsGuest = () => {
+    // Set a dummy guest user
+    const guestUser = {
+      _id: "guest_" + Math.random().toString(36).substr(2, 9),
+      email: "guest@policypulse.in",
+      full_name: "Guest User",
+      preferred_language: "en",
+      is_guest: true
+    };
+    setUser(guestUser);
+    // Note: We don't set a token, so API calls will be unauthenticated (optional auth)
+    // Clear any existing token to avoid confusion
+    localStorage.removeItem('token');
+    setToken(null);
+    delete axios.defaults.headers.common['Authorization'];
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, loginAsGuest, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -159,11 +159,19 @@ def synthesize_answer(
     """
     # Detect query intent
     query_lower = query.lower()
-    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"])
+    
+    # Priority: Check for suggestion intents first (overrides "what is")
+    is_suggestion = any(q in query_lower for q in [
+        "suggest", "recommend", "for me", "best policy", 
+        "policies for", "schemes for", "apply for", 
+        "tell me some policies", "what are some policies"
+    ])
+
+    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"]) and not is_suggestion
     is_eligibility = any(q in query_lower for q in ["eligible", "eligibility", "who can", "qualify", "am i eligible"])
-    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"])
+    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"]) and not is_suggestion
     is_budget = any(q in query_lower for q in ["budget", "allocation", "spending", "cost", "expenditure"])
-    is_suggestion = any(q in query_lower for q in ["suggest", "recommend", "for me", "best policy"])
+    
 
     # 0. Check for Suggestions with Demographics
     demographics = context.get('demographics', {}) if context else {}
@@ -184,12 +192,12 @@ def synthesize_answer(
             is_answering_prompt = True
 
     # Trigger eligibility check if:
-    # 1. Explicitly asked ("suggest")
+    # 1. Explicitly asked ("suggest", "policies for")
     # 2. Answering a prompt
     # 3. Query contains rich demographics (implying "for me") -> UNLESS it's a direct "What is" question
     has_rich_demographics = len(demographics) >= 2 or 'occupation' in demographics
     
-    skip_eligibility = is_what_is or is_budget or is_how_to
+    skip_eligibility = (is_what_is or is_budget) and not is_suggestion
     
     if (is_suggestion or is_answering_prompt or (has_rich_demographics and not skip_eligibility)) and demographics:
         from .eligibility import check_eligibility  # Lazy import to avoid circular dep issues

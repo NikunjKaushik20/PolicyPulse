@@ -1,6 +1,6 @@
 # PolicyPulse
 
-A semantic retrieval system for Indian government policy data. Built during the AI for Community Impact hackathon to solve a real problem: citizens can't easily find which schemes they're eligible for, what the current rules are, or how policies have changed over time.
+A semantic retrieval system for Indian government policy data. Built during the AI for Bharat hackathon to solve a real problem: citizens can't easily find which schemes they're eligible for, what the current rules are, or how policies have changed over time.
 
 ### 🚀 Live Demo: **[http://64.227.174.109:8000](http://64.227.174.109:8000)**
 > **Note:** Hosted on DigitalOcean (HTTP). Please ignore browser "Not Secure" warnings; it is safe for evaluation.
@@ -419,8 +419,8 @@ ChromaDB means single-machine limit. We accepted this for hackathon simplicity. 
 - **Optimization**: Fine-tune embedding model on 50K policy queries from pilot data
 
 ### Funding & Operations (Month 4-6)
-- **Grants**: Apply for MeitY's Emerging Tech Grant (₹25L available for civic AI)
-- **Training**: Train 3 Jan Seva Kendra staff as "policy data curators" (₹15K/month each)
+- **Grants**: Apply for MeitY's Emerging Tech Grant 
+- **Training**: Train 3 Jan Seva Kendra staff as "policy data curators" 
 - **Feedback**: Set up community feedback loop where users can flag outdated/incorrect answers
 
 ### Success Metrics
@@ -438,4 +438,4 @@ GPL-3.0
 
 ## Acknowledgments
 
-Built for the AI for Community Impact hackathon. We wanted to demonstrate that useful policy access tools can be built with open-source components and modest hardware. The core retrieval works entirely offline once data is ingested.
+Built for the AI for Bharat hackathon. We wanted to demonstrate that useful policy access tools can be built with open-source components and modest hardware. The core retrieval works entirely offline once data is ingested.

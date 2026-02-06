@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const LoginModal = () => {
-  const { login, signup } = useAuth();
+  const { login, signup, loginAsGuest } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -107,6 +107,15 @@ const LoginModal = () => {
             className="text-indigo-600 font-semibold hover:underline"
           >
             {isLogin ? "Sign up" : "Log in"}
+          </button>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <button
+            onClick={() => loginAsGuest()}
+            className="w-full text-gray-600 font-medium py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            Continue as Guest
           </button>
         </div>
       </div>
