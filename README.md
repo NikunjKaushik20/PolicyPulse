@@ -2,8 +2,7 @@
 
 A semantic retrieval system for Indian government policy data. Built during the AI for Bharat hackathon to solve a real problem: citizens can't easily find which schemes they're eligible for, what the current rules are, or how policies have changed over time.
 
-### 🚀 Live Demo: **[http://64.227.174.109:8000](http://64.227.174.109:8000)**
-### 🚀 Live Demo: **[http://64.227.174.109:8000](http://64.227.174.109:8000)**
+### 🚀 Live Demo: **[http://64.227.174.109:8000](http://64.227.174.109:8000)** 
 > **Note:** Hosted on DigitalOcean (HTTP). Please ignore "Not Secure" warnings.
 > **Microphone Access:** To use voice features, you must enable `chrome://flags/#unsafely-treat-insecure-origin-as-secure` and add this URL, as browsers block mics on HTTP.
 
