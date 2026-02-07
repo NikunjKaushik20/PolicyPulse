@@ -283,6 +283,10 @@ def synthesize_answer(
     else:
         filtered_points = retrieved_points
 
+    # Extract year from query if mentioned (e.g., "2011", "in 2020")
+    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', query)
+    query_year = year_match.group(1) if year_match else None
+    
     # --- GOVERNANCE ENGINE INTEGRATION (Phase 2/3) ---
     governance_section = ""
     if policy_graph and policy_executor and primary_policy and primary_policy != "UNKNOWN":
@@ -353,10 +357,6 @@ def synthesize_answer(
             governance_section = f"\n*(Governance check failed: {str(e)})*"
             
     # ----------------------------------------------------
-    
-    # Extract year from query if mentioned (e.g., "2011", "in 2020")
-    year_match = re.search(r'\b(19\d{2}|20\d{2})\b', query)
-    query_year = year_match.group(1) if year_match else None
     
     # Policy descriptions for "what is" queries
     POLICY_DESCRIPTIONS = {
