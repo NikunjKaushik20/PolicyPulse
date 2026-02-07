@@ -654,18 +654,18 @@ Core search works fully offline once data is ingested.
 
 ```
 PolicyPulse/
-├── src/                    # Core modules (25 files)
+├── src/                    # Core modules 
 │   ├── api.py              # FastAPI endpoints
 │   ├── chromadb_setup.py   # Vector store initialization
 │   ├── reasoning.py        # Query processing and synthesis
 │   ├── drift.py            # Policy evolution analysis
 │   ├── memory.py           # Time-decay system
-│   ├── eligibility.py      # Rule-based scheme matching (50 policies)
+│   ├── eligibility.py      # Rule-based scheme matching 
 │   ├── translation.py      # Multilingual support
 │   ├── document_checker.py # OCR document processing
 │   └── tts.py              # Text-to-speech
 ├── scripts/                # Utility scripts
-│   ├── run_evaluation.py   # Full test suite (785 lines)
+│   ├── run_evaluation.py   # Full test suite 
 │   ├── run_sms_tunnel.py   # WhatsApp/SMS tunnel via ngrok
 │   ├── verify_*.py         # Verification scripts
 │   └── generate_*.py       # Data generation scripts
@@ -678,7 +678,7 @@ PolicyPulse/
 │   │   ├── App.jsx         # Main app with language context
 │   │   ├── components/     # Sidebar, ChatArea, LoginModal
 │   │   └── translations.js # i18n strings
-├── Data/                   # Policy datasets (223 files)
+├── Data/                   # Policy datasets
 ├── frontend_snippets/      # UI screenshots
 ├── cli.py                  # Data ingestion CLI
 ├── start.py                # Server launcher
