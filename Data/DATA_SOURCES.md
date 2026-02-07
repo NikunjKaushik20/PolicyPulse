@@ -88,4 +88,4 @@ For data verification queries:
 ---
 
 *Last Updated: 2026-02-05*
-*PolicyPulse - AI for Community Impact*
+*PolicyPulse - AI for Bharat*

@@ -27,8 +27,9 @@ from pathlib import Path
 from collections import defaultdict
 import numpy as np
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add project root to path for imports
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, PROJECT_ROOT)
 
 try:
     from src.embeddings import embed_text, get_sentiment

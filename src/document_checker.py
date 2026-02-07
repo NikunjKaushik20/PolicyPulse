@@ -11,7 +11,7 @@ Features:
 import re
 import logging
 from typing import Dict, List, Optional, Any
-from PIL import Image
+from PIL import Image, ImageEnhance
 import pytesseract
 from io import BytesIO
 
@@ -70,9 +70,35 @@ SCHEME_REQUIREMENTS = {
 }
 
 
+def preprocess_image(image: Image.Image) -> Image.Image:
+    """
+    Preprocess image for better OCR accuracy.
+    - Convert to grayscale
+    - Increase contrast
+    - Sharpen
+    """
+    # 1. Grayscale
+    image = image.convert('L')
+    
+    # 2. Enhance Contrast
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(2.0)  # Increase contrast
+    
+    # 3. Sharpen
+    enhancer = ImageEnhance.Sharpness(image)
+    image = enhancer.enhance(1.5) # Sharpen slightly
+    
+    # 4. Resize if too small (heuristic)
+    if image.width < 1000:
+        ratio = 2.0
+        new_size = (int(image.width * ratio), int(image.height * ratio))
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
+        
+    return image
+
 def extract_text_from_image(image_bytes: bytes) -> str:
     """
-    Extract text from image using OCR.
+    Extract text from image using OCR with preprocessing.
     
     Args:
         image_bytes: Image file as bytes
@@ -83,16 +109,16 @@ def extract_text_from_image(image_bytes: bytes) -> str:
     try:
         image = Image.open(BytesIO(image_bytes))
         
-        # Convert to RGB if necessary
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
+        # Preprocess
+        processed_image = preprocess_image(image)
         
-        # Extract text using pytesseract
-        text = pytesseract.image_to_string(image, lang='eng+hin')
+        # Extract text (English + Hindi)
+        # Assuming tesseract is installed and in path or configured
+        # custom_config = r'--oem 3 --psm 6'
+        text = pytesseract.image_to_string(processed_image, lang='eng+hin')
         
-        logger.info(f"Extracted {len(text)} characters from image")
-        return text
-        
+        logger.info(f"Extracted {len(text)} characters from image after preprocessing")
+        return text.strip()
     except Exception as e:
         logger.error(f"OCR extraction failed: {e}")
         raise

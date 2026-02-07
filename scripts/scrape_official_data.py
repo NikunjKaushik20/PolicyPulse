@@ -157,7 +157,7 @@ For data verification queries:
 ---
 
 *Last Updated: {date}*
-*PolicyPulse - AI for Community Impact*
+*PolicyPulse - AI for Bharat*
 """.format(date=datetime.now().strftime("%Y-%m-%d"))
     
     with open(SOURCES_FILE, 'w', encoding='utf-8') as f:

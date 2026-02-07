@@ -1,0 +1,51 @@
+{
+    "documents": [
+        {
+            "id": "DOC-PMK-001",
+            "title": "PM-KISAN Operational Guidelines 2019",
+            "policy_id": "PM-KISAN",
+            "doc_type": "NOTIFICATION",
+            "date_issued": "2019-02-01",
+            "url": "https://pmkisan.gov.in/guidelines"
+        },
+        {
+            "id": "DOC-PMK-002",
+            "title": "Circular regarding Tax Payers Exclusion",
+            "policy_id": "PM-KISAN",
+            "doc_type": "CIRCULAR",
+            "date_issued": "2019-06-01",
+            "url": "https://pmkisan.gov.in/circulars/tax"
+        }
+    ],
+    "clauses": [
+        {
+            "id": "PMK-2019-C1",
+            "policy_id": "PM-KISAN",
+            "parent_doc_id": "DOC-PMK-001",
+            "authority_level": "NOTIFICATION",
+            "effective_from": "2019-02-01T00:00:00",
+            "text": "All landholding farmer families having cultivable landholding upto 2 hectares are eligible.",
+            "logic": {
+                "and": [
+                    {"var": "user.is_farmer"},
+                    {"<=": [{"var": "user.land_holding"}, 2]}
+                ]
+            },
+            "tags": ["eligibility", "land_limit"]
+        },
+        {
+            "id": "PMK-2019-C1-B",
+            "policy_id": "PM-KISAN",
+            "parent_doc_id": "DOC-PMK-002",
+            "authority_level": "CIRCULAR",
+            "effective_from": "2019-06-01T00:00:00",
+            "text": "All landholding farmer families are eligible, subject to existing exclusions. The 2 hectare limit is removed.",
+            "superseded_by": null,
+            "logic": {
+                "var": "user.is_farmer"
+            },
+            "depends_on": ["PMK-2019-C1"],
+            "tags": ["eligibility", "land_limit"]
+        }
+    ]
+}

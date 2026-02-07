@@ -527,9 +527,19 @@ async def process_audio_endpoint(file: UploadFile = File(...)):
     # Simple placeholder - full implementation in original file
     return {"transcription": "Functionality preserved but simplified for overview", "success": True}
 
-@app.post("/eligibility/check")
+@app.post("/api/check_eligibility")
 async def check_user_eligibility(profile: EligibilityProfile):
-    return check_eligibility(profile.dict())
+    """
+    Check schemes user is eligible for based on profile.
+    Returns: Dict with 'eligible' and 'excluded' (with reasons).
+    """
+    # Convert Pydantic model to dict
+    profile_dict = profile.dict()
+    
+    # Run enhanced eligibility check
+    results = check_eligibility(profile_dict)
+    
+    return results
 
 @app.get("/eligibility/steps/{policy_id}")
 async def get_application_steps(policy_id: str):

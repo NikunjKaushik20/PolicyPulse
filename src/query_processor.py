@@ -176,15 +176,22 @@ def extract_demographics(query: str) -> Dict[str, Any]:
     elif any(w in query_lower for w in ['male', 'man', 'boy', 'gentleman']):
         demographics['gender'] = 'male'
         
-    # 3. Category extraction
+    # 3. Category extraction (English + Hindi)
     # Use word boundaries for short acronyms
-    if re.search(r'\b(sc|scheduled caste)\b', query_lower):
+    # SC - Scheduled Caste
+    if re.search(r'\b(sc|scheduled caste)\b', query_lower) or 'अनुसूचित जाति' in query or 'दलित' in query:
         demographics['category'] = 'sc'
-    elif re.search(r'\b(st|scheduled tribe)\b', query_lower):
+    # ST - Scheduled Tribe
+    elif re.search(r'\b(st|scheduled tribe)\b', query_lower) or 'अनुसूचित जनजाति' in query or 'आदिवासी' in query:
         demographics['category'] = 'st'
-    elif re.search(r'\b(obc|backward class)\b', query_lower):
+    # OBC - Other Backward Class
+    elif re.search(r'\b(obc|backward class)\b', query_lower) or 'अन्य पिछड़ा वर्ग' in query or 'पिछड़ा' in query:
         demographics['category'] = 'obc'
-    elif 'general' in query_lower:
+    # EWS - Economically Weaker Section (10% reservation, 2019+)
+    elif re.search(r'\b(ews|economically weaker)\b', query_lower) or 'आर्थिक रूप से कमजोर' in query:
+        demographics['category'] = 'ews'
+    # General
+    elif 'general' in query_lower or 'सामान्य' in query:
         demographics['category'] = 'general'
         
     # 4. Occupation extraction

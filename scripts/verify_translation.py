@@ -2,8 +2,9 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Ensure we can import from src
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+# Add project root to path for imports
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, PROJECT_ROOT)
 
 # Load env to get keys
 load_dotenv()

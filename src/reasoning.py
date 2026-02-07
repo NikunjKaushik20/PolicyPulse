@@ -9,8 +9,17 @@ import re
 import logging
 from .policy_urls import get_application_url
 from .drift import compute_drift_timeline, find_max_drift
+from .policy_engine.instance import get_engine_components
 
 logger = logging.getLogger(__name__)
+
+# Initialize Policy Engine
+try:
+    policy_graph, policy_executor, policy_diff = get_engine_components()
+    logger.info("Policy Engine initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize Policy Engine: {e}")
+    policy_graph, policy_executor, policy_diff = None, None, None
 
 # TODO: consider caching frequent queries - seeing ~40% repeat rate in logs
 # UPDATE 2024-01: tried redis, too heavy for this use case
@@ -157,27 +166,11 @@ def synthesize_answer(
     Returns:
         Synthesized answer string
     """
-    # Detect query intent
-    query_lower = query.lower()
-    
-    # Priority: Check for suggestion intents first (overrides "what is")
-    is_suggestion = any(q in query_lower for q in [
-        "suggest", "recommend", "for me", "best policy", 
-        "policies for", "schemes for", "apply for", 
-        "tell me some policies", "what are some policies"
-    ])
-
-    is_what_is = any(q in query_lower for q in ["what is", "what are", "explain", "tell me about", "describe"]) and not is_suggestion
-    is_eligibility = any(q in query_lower for q in ["eligible", "eligibility", "who can", "qualify", "am i eligible"])
-    is_how_to = any(q in query_lower for q in ["how to", "how do", "apply", "register", "get"]) and not is_suggestion
-    is_budget = any(q in query_lower for q in ["budget", "allocation", "spending", "cost", "expenditure"])
-    
-
-    # 0. Check for Suggestions with Demographics
-    demographics = context.get('demographics', {}) if context else {}
     
     # Check if we are satisfying a previous request for occupation
     chat_history = context.get('chat_history', []) if context else []
+    demographics = context.get('demographics', {}) if context else {}
+    
     # Look at the last message from the model
     last_bot_msg = None
     for msg in reversed(chat_history):
@@ -190,6 +183,14 @@ def synthesize_answer(
         # Check if the last thing bot said was asking for occupation
         if "specify your occupation" in last_bot_msg.get('content', '') or "need to know your occupation" in last_bot_msg.get('content', ''):
             is_answering_prompt = True
+
+    # Detect query type for routing
+    query_lower = query.lower()
+    is_suggestion = any(w in query_lower for w in ["suggest", "recommend", "which scheme", "what scheme", "policies for", "eligible for"])
+    is_what_is = any(w in query_lower for w in ["what is", "what's", "explain", "tell me about", "describe"])
+    is_budget = any(w in query_lower for w in ["budget", "allocation", "expenditure", "spending", "crore", "spent"])
+    is_eligibility = any(w in query_lower for w in ["eligible", "eligibility", "qualify", "can i get", "am i"])
+    is_how_to = any(w in query_lower for w in ["how to", "apply", "application", "register", "enrollment"])
 
     # Trigger eligibility check if:
     # 1. Explicitly asked ("suggest", "policies for")
@@ -215,21 +216,31 @@ def synthesize_answer(
         if is_minor and 'occupation' not in demographics:
             demographics['occupation'] = 'student'
             
-        # Run eligibility check
-        eligible_schemes = check_eligibility(demographics)
+        # Run eligibility check (returns dict with 'eligible' and 'excluded')
+        eligibility_result = check_eligibility(demographics)
+        eligible_schemes = eligibility_result.get('eligible', [])
+        excluded_schemes = eligibility_result.get('excluded', [])
         
         if eligible_schemes:
             age_str = f"{demographics.get('age')}yr old" if demographics.get('age') else "age unknown"
             occ_str = demographics.get('occupation') if demographics.get('occupation') else "profile"
             sections = [f"Based on your profile ({age_str}, {occ_str}), here are the best policies for you:"]
             
-            for scheme in eligible_schemes[:7]:  # Increased to Top 7
+            for scheme in eligible_schemes[:7]:  # Top 7
                 sections.append(
-                    f"### **{scheme['policy_name']}**\n"
+                    f"### **{scheme['name']}**\n"
                     f"{scheme['description']}\n"
                     f"**Benefits**: {scheme['benefits']}\n"
                     f"**Apply Link**: [{scheme['application_link']}]({scheme['application_link']})"
                 )
+            
+            # Also show exclusion reasons if any (Why Not feature)
+            if excluded_schemes:
+                excluded_preview = excluded_schemes[:3]  # Top 3 exclusions
+                sections.append("\n---\n**Why you may not qualify for some schemes:**")
+                for ex in excluded_preview:
+                    if ex.get('reasons'):
+                        sections.append(f"- **{ex['name']}**: {', '.join(ex['reasons'])}")
             
             return "\n\n".join(sections)
         else:
@@ -271,6 +282,77 @@ def synthesize_answer(
              pass
     else:
         filtered_points = retrieved_points
+
+    # --- GOVERNANCE ENGINE INTEGRATION (Phase 2/3) ---
+    governance_section = ""
+    if policy_graph and policy_executor and primary_policy and primary_policy != "UNKNOWN":
+        try:
+            # Determine reference date
+            from datetime import date
+            ref_date = date.today()
+            if query_year:
+                try:
+                    ref_date = date(int(query_year), 12, 31) # End of year generally safe
+                except:
+                    pass
+            
+            # Get active clauses
+            active_clauses = policy_graph.get_active_clauses(primary_policy, ref_date)
+            
+            if active_clauses:
+                gov_lines = [f"\n🔍 **Governance Verification ({ref_date.year})**:"]
+                
+                # If we have demographics, run logic
+                if demographics and len(demographics) > 0:
+                    gov_lines.append("**Eligibility Logic Trace:**")
+                    pass_count = 0
+                    fail_count = 0
+                    
+                    for clause in active_clauses:
+                        # Only evaluate clauses with meaningful logic
+                        if clause.logic:
+                            # We might want to filter relevant tags (e.g. "eligibility")
+                            if "eligibility" in clause.tags:
+                                passed = policy_executor.evaluate(clause.logic, demographics)
+                                icon = "✅" if passed else "❌"
+                                
+                                # Provenance
+                                docs = policy_graph.get_provenance_chain(clause.id)
+                                doc_title = docs[0].title if docs else "Unknown Authority"
+                                doc_type = docs[0].doc_type if docs else "Clause"
+                                
+                                msg = f"- {icon} **{doc_type}**: {clause.text} (Source: {doc_title})"
+                                if not passed:
+                                    reasons = policy_executor.explain_failure(clause.logic, demographics)
+                                    if reasons:
+                                        msg += f"\n  - *Reason*: {'; '.join(reasons)}"
+                                
+                                gov_lines.append(msg)
+                                if passed: pass_count += 1
+                                else: fail_count += 1
+                    
+                    if pass_count > 0 and fail_count == 0:
+                        gov_lines.append(f"\n✅ **Result**: You appear eligible based on {pass_count} active legal clauses.")
+                    elif fail_count > 0:
+                        gov_lines.append(f"\n❌ **Result**: You are currently ineligible due to {fail_count} unmet conditions.")
+                
+                else:
+                    # Just list the active binding rules if no user profile
+                    gov_lines.append("**Active Binding Rules (Verified):**")
+                    for clause in active_clauses[:3]: # Limit to top 3 to avoid spam
+                         docs = policy_graph.get_provenance_chain(clause.id)
+                         source = f"{docs[0].doc_type} {docs[0].id}" if docs else "Official Rule"
+                         gov_lines.append(f"- {clause.text} *[{source}]*")
+                    if len(active_clauses) > 3:
+                         gov_lines.append(f"*(and {len(active_clauses)-3} more active clauses)*")
+
+                governance_section = "\n".join(gov_lines)
+                
+        except Exception as e:
+            logger.error(f"Governance engine error: {e}")
+            governance_section = f"\n*(Governance check failed: {str(e)})*"
+            
+    # ----------------------------------------------------
     
     # Extract year from query if mentioned (e.g., "2011", "in 2020")
     year_match = re.search(r'\b(19\d{2}|20\d{2})\b', query)
@@ -312,6 +394,24 @@ def synthesize_answer(
             content = top['content_preview'][:300] if top.get('content_preview') else ""
             if content and len(content) > 50:
                 sections.append(f"**Key Details**: {content}")
+        
+        # Add authoritative citation from eligibility metadata
+        from .eligibility import get_policy_details
+        policy_details = get_policy_details(primary_policy)
+        if policy_details and policy_details.get("metadata"):
+            meta = policy_details["metadata"]
+            citation_parts = []
+            if meta.get("notification_number"):
+                citation_parts.append(f"**Notification**: {meta['notification_number']}")
+            if meta.get("authority"):
+                citation_parts.append(f"**Authority**: {meta['authority']}")
+            if meta.get("status"):
+                citation_parts.append(f"**Status**: {meta['status']}")
+            if meta.get("gazette_url"):
+                citation_parts.append(f"**Official Source**: [{meta['gazette_url']}]({meta['gazette_url']})")
+            
+            if citation_parts:
+                sections.append("\n📜 **Proof/Citation**:\n" + " | ".join(citation_parts))
     
     # For budget queries, prioritize budget modality with actual amounts
     elif is_budget:
@@ -394,7 +494,7 @@ def synthesize_answer(
         top = filtered_points[0]
         sections.append(f"{top['content_preview'][:500]}")
     
-    return "\n\n".join(sections) if sections else "No detailed information available."
+    return ("\n\n".join(sections) + "\n" + governance_section) if sections else "No detailed information available."
 
 
 def calculate_confidence(retrieved_points: List[Dict[str, Any]]) -> float:
