@@ -145,15 +145,15 @@ def format_sms_response(response_data: Dict[str, Any], max_length: int = 1600) -
             if "sources" in response_data and response_data["sources"]:
                 answer += "\n🔗 *Links:*\n"
                 for source in response_data["sources"][:2]:
-                     url = source.get("metadata", {}).get("source", "policypulse.com")
-                     if not url.startswith("http"): url = "policypulse.com"
+                     url = source.get("metadata", {}).get("source", "http://64.227.174.109:8000/")
+                     if not url.startswith("http"): url = "http://64.227.174.109:8000/"
                      # Avoid duplicates if link is already in text
                      if url not in answer:
                         answer += f"• {url}\n"
             
             # Truncate
             if len(answer) > max_length - 50:
-                answer = answer[:max_length-50] + "...\n\nFull info: policypulse.com"
+                answer = answer[:max_length-50] + "...\n\nFull info: http://64.227.174.109:8000/"
             
             return answer
         
@@ -239,7 +239,7 @@ EXAMPLE:
 "NREGA eligibility"
 "What is PM-KISAN"
 
-Website: policypulse.com
+Website: http://64.227.174.109:8000/
 """
 
 

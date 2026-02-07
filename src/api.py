@@ -627,7 +627,7 @@ async def reply_sms(Body: str = Form(...), From: str = Form(...)):
             # Basic eligibility stub (could be enhanced later)
             policy = parsed.get("policy")
             if policy:
-                 response_data = {"final_answer": f"To check eligibility for {policy}, please visit policypulse.com/check. Required: Age, Income, Citizenship."}
+                 response_data = {"final_answer": f"To check eligibility for {policy}, please visit http://64.227.174.109:8000/. Required: Age, Income, Citizenship."}
             else:
                  response_data = {"final_answer": "Please specify a policy (e.g., 'NREGA eligibility')."}
 
