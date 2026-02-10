@@ -6,9 +6,7 @@ A policy reasoning and accountability platform for Indian government schemes. Bu
 **Coverage:** 130+ schemes | 2,500+ documents | 10 languages  
 **Capability:** Retrieval ✓ | Eligibility Reasoning ✓ | "Why Not" Explanations ✓ | Causality Tracking (50 schemes) ✓
 
-### 🚀 Live Demo: **[https://policypulse.live/](hhttps://policypulse.live/)**
-> **Note:** Hosted on DigitalOcean (HTTP). Please ignore "Not Secure" warnings.
-> **Microphone Access:** To use voice features, you must enable `chrome://flags/#unsafely-treat-insecure-origin-as-secure` and add this URL, as browsers block mics on HTTP.
+### 🚀 Live Demo: **[https://policypulse.live](https://policypulse.live)**
 
 ## Table of Contents
 1. [The Problem](#the-problem-we-observed)
