@@ -1,12 +1,3 @@
-"""
-AI-powered document checker for PolicyPulse.
-
-Features:
-- OCR text extraction from uploaded images
-- Document type classification
-- Field extraction and validation
-- Scheme requirement matching
-"""
 
 import re
 import logging

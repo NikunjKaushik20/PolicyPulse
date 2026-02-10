@@ -1,9 +1,3 @@
-"""
-ChromaDB Setup - Replaces Qdrant for Docker-free deployment.
-
-ChromaDB is a pure Python vector database with persistent storage,
-no Docker required. Provides similar functionality to Qdrant.
-"""
 
 import os
 import logging
