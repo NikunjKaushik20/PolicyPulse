@@ -1,0 +1,100 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PolicyPulse — AMD EPYC + Instinct Docker Compose Stack
+#
+# Services:
+#   api         - FastAPI (N workers, EPYC-pinned, ROCm GPU passthrough)
+#   chromadb    - Dedicated ChromaDB vector store (EPYC I/O optimised)
+#
+# Deploy on AMD EPYC server with AMD Instinct GPU:
+#   docker compose up -d
+#
+# Deploy CPU-only (EPYC):
+#   docker compose up -d api
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI Application ─────────────────────────────────────────────────────
+  api:
+    build: .
+    image: policypulse-amd:latest
+    container_name: policypulse_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # ROCm performance tuning
+      - HSA_ENABLE_SDMA=0
+      - PYTORCH_HIP_ALLOC_CONF=max_split_size_mb:512
+      - TOKENIZERS_PARALLELISM=false
+      # EPYC threading (set to server's physical core count at deploy time)
+      - OMP_NUM_THREADS=${EPYC_PHYSICAL_CORES:-8}
+      - MKL_NUM_THREADS=${EPYC_PHYSICAL_CORES:-8}
+      # Application env
+      - CHROMADB_DIR=/data/chromadb
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GOOGLE_CLOUD_TRANSLATE_KEY=${GOOGLE_CLOUD_TRANSLATE_KEY:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+    volumes:
+      - ./chromadb_data:/data/chromadb
+      - ./logs:/app/logs
+      - ./policypulse_db.json:/app/policypulse_db.json
+    # ── AMD GPU passthrough (AMD Instinct MI250X / MI300X) ───────────────────
+    # Comment out this section for CPU-only EPYC deployment
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    # ── EPYC CPU resource limits ─────────────────────────────────────────────
+    # NUMA-aware: pin API workers to first NUMA node for memory locality
+    # e.g. "0-47" for first NUMA node of a 2-socket EPYC 7742 (96 cores each)
+    # Avoids cross-socket memory access penalties (up to 40% latency hit)
+    cpuset: "${EPYC_CPUSET:-0-15}"
+    deploy:
+      resources:
+        limits:
+          cpus: "${EPYC_CPU_LIMIT:-16}"
+          memory: "${MEMORY_LIMIT:-32g}"
+        reservations:
+          cpus: "${EPYC_CPU_RESERVE:-8}"
+          memory: "8g"
+    command: ["python", "start_amd.py", "--workers", "${UVICORN_WORKERS:-8}"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ── ChromaDB Vector Store ────────────────────────────────────────────────────
+  # Running as a separate service allows independent scaling.
+  # On EPYC, I/O-heavy vector operations benefit from dedicated NUMA affinity.
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: policypulse_chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chromadb_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ALLOW_RESET=TRUE
+    # Pin ChromaDB to separate EPYC cores (avoid contention with API workers)
+    cpuset: "${CHROMADB_CPUSET:-16-19}"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: "8g"
+
+volumes:
+  chromadb_data:
+  logs:

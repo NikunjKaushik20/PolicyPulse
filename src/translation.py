@@ -121,6 +121,27 @@ def translate_text(text: str, target_lang: str = 'hi', source_lang: str = 'en') 
         return text  # Return original on error
 
 
+async def async_translate_text(text: str, target_lang: str = 'hi', source_lang: str = 'en') -> str:
+    """
+    Async wrapper for translate_text — offloads the blocking network call
+    to the AMD EPYC-tuned I/O thread pool.
+
+    AMD EPYC Optimization:
+      Translation hits external APIs (Google/Gemini) which are I/O-bound.
+      Using the EPYC I/O thread pool (sized to cores×2) prevents blocking
+      the async event loop, allowing Uvicorn workers to continue serving
+      other requests while waiting for the API response.
+    """
+    import asyncio
+    from .amd_utils import get_io_thread_pool
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        get_io_thread_pool(),
+        lambda: translate_text(text, target_lang=target_lang, source_lang=source_lang)
+    )
+
+
 def translate_response(response: dict, target_lang: str = 'hi') -> dict:
     """
     Translate API response to target language.

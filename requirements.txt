@@ -1,29 +1,71 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# PolicyPulse — Dependencies (AMD ROCm + EPYC Optimized)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# AMD GPU (Instinct MI200/MI300 series) — install PyTorch with ROCm:
+#   pip install torch torchvision torchaudio \
+#     --index-url https://download.pytorch.org/whl/rocm6.1
+#
+# AMD EPYC CPU only — standard PyTorch:
+#   pip install torch>=2.1.2
+#
+# Then install the rest:
+#   pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Web framework ──────────────────────────────────────────────────────────────
 fastapi==0.109.0
 uvicorn==0.27.0
 pydantic==2.5.3
 slowapi==0.1.9
-chromadb>=1.4.1
+python-multipart==0.0.6
+multipart
+
+# ── ML / AI (core) ─────────────────────────────────────────────────────────────
+# NOTE: torch must be installed separately with ROCm or CPU wheel (see above).
 sentence-transformers==2.7.0
 transformers==4.36.2
-torch>=2.1.2
-pandas==2.1.4
-numpy<2.0,>=1.26.0
-Pillow==10.2.0
-pytesseract==0.3.10
-python-multipart==0.0.6
-deep-translator==1.11.4
-gTTS==2.5.0
-google-generativeai==0.3.2
-google-cloud-translate==3.14.0
-twilio==8.11.1
-python-dotenv==1.0.0
-langdetect==1.0.9
-pymongo>=4.6.1
-python-jose[cryptography]
-passlib[bcrypt]
-multipart
-# Missing dependencies added
-librosa>=0.10.1
+# torch>=2.1.2        <-- install separately; see AMD instructions above
+
+# ── Vector databases ───────────────────────────────────────────────────────────
+chromadb>=1.4.1
 fastembed>=0.2.0
 qdrant-client>=1.7.0
+
+# ── Data & numerics ────────────────────────────────────────────────────────────
+pandas==2.1.4
+numpy>=1.26.0,<2.0
+
+# ── Policy graph ───────────────────────────────────────────────────────────────
+networkx>=3.0
+
+# ── Document processing (OCR) ─────────────────────────────────────────────────
+Pillow==10.2.0
+pytesseract==0.3.10
+
+# ── Audio (EPYC CPU DSP + GPU inference) ──────────────────────────────────────
+librosa>=0.10.1
+soundfile>=0.12.1
+
+# ── Translation & language ────────────────────────────────────────────────────
+deep-translator==1.11.4
+langdetect==1.0.9
+google-generativeai==0.3.2
+google-cloud-translate==3.14.0
+
+# ── Text-to-speech ────────────────────────────────────────────────────────────
+gTTS==2.5.0
+
+# ── SMS / WhatsApp (Twilio) ───────────────────────────────────────────────────
+twilio==8.11.1
+
+# ── Database (local dev) ──────────────────────────────────────────────────────
+pymongo>=4.6.1
 tinydb>=4.8.0
+
+# ── Auth ───────────────────────────────────────────────────────────────────────
+python-jose[cryptography]
+passlib[bcrypt]
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+python-dotenv==1.0.0

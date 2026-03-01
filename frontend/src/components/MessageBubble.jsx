@@ -15,23 +15,59 @@ const MessageBubble = ({ message, lang }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSpeak = () => {
+  const handleSpeak = async () => {
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
+      // Stop any currently playing audio
+      const existingAudio = document.getElementById('sarvam-tts-audio');
+      if (existingAudio) {
+        existingAudio.pause();
+        existingAudio.remove();
+      }
+      window.speechSynthesis.cancel(); // also cancel browser fallback if active
       setIsSpeaking(false);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(message.content);
-    // Map our lang codes to browser standard if needed, or use as is
-    // Browser usually expects 'en-US', 'hi-IN', etc.
-    utterance.lang = lang; 
-    
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
+
+    try {
+      // Call our Sarvam AI TTS backend
+      const response = await fetch('/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: message.content,
+          lang: lang || 'hi',
+          slow: false,
+        }),
+      });
+
+      if (!response.ok) throw new Error('TTS request failed');
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.id = 'sarvam-tts-audio';
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        audio.remove();
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        audio.remove();
+      };
+      audio.play();
+    } catch (err) {
+      console.error('Sarvam TTS failed, falling back to browser:', err);
+      // Fallback to browser speechSynthesis
+      const utterance = new SpeechSynthesisUtterance(message.content);
+      utterance.lang = lang || 'en-IN';
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   // Check if message has drift data for visualization

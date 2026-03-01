@@ -273,7 +273,25 @@ def consolidate_memories(
     points_to_delete = []
     processed_point_ids = set()
     
-    # Compare each pair of points
+    # ── AMD Optimization: GPU-accelerated pairwise similarity ──────────────
+    # Instead of O(N²) scalar numpy comparisons, compute ALL pairwise cosine
+    # similarities in a single GPU matrix multiply (batched torch.mm).
+    # Falls back to numpy on CPU-only systems.
+    all_vectors = np.array([p.vector for p in points_batch], dtype=np.float32)
+
+    try:
+        from .embeddings import gpu_cosine_similarity_matrix
+        sim_matrix = gpu_cosine_similarity_matrix(all_vectors, all_vectors)
+        logger.info(f"[AMD] Memory consolidation: GPU-accelerated cosine matrix ({len(points_batch)}×{len(points_batch)})")
+    except Exception:
+        # CPU fallback
+        norms = np.linalg.norm(all_vectors, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1e-10, norms)  # avoid division by zero
+        normed = all_vectors / norms
+        sim_matrix = normed @ normed.T
+        logger.info(f"[AMD] Memory consolidation: CPU numpy cosine matrix ({len(points_batch)}×{len(points_batch)})")
+
+    # Compare each pair of points using pre-computed similarity matrix
     for i in range(len(points_batch)):
         if points_batch[i].id in points_to_delete or points_batch[i].id in processed_point_ids:
             continue
@@ -282,15 +300,7 @@ def consolidate_memories(
             if points_batch[j].id in points_to_delete or points_batch[j].id in processed_point_ids:
                 continue
             
-            # Calculate cosine similarity
-            vector_i = np.array(points_batch[i].vector)
-            vector_j = np.array(points_batch[j].vector)
-            similarity = np.dot(vector_i, vector_j) / (
-
-       
-
-                np.linalg.norm(vector_i) * np.linalg.norm(vector_j)
-            )
+            similarity = float(sim_matrix[i][j])
             
             if similarity >= similarity_threshold:
                 # Merge the two points, keeping the one with more accesses
