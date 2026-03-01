@@ -339,6 +339,44 @@ async def query_policies(request: Request, query_req: QueryRequest, current_user
         reasoning["session_id"] = session_id
         reasoning["original_query"] = original_query
         reasoning["detected_language"] = detected_lang
+
+        # 6b. Compute drift timeline if query is about policy changes
+        drift_keywords = ['drift', 'change', 'changed', 'evolve', 'evolution', 'history',
+                          'over time', 'timeline', 'modify', 'modified', 'update', 'revised']
+        query_lower = search_query.lower()
+        if any(kw in query_lower for kw in drift_keywords):
+            # Try to identify the policy from multiple sources
+            policy_id = query_info.get("policy_id")
+            
+            # Fallback 1: from retrieved results
+            if not policy_id:
+                try:
+                    metas = results.get('metadatas', [[]])[0]
+                    if metas and isinstance(metas, list) and len(metas) > 0:
+                        policy_id = metas[0].get('policy_id', '')
+                except (IndexError, TypeError, AttributeError):
+                    pass
+            
+            # Fallback 2: extract policy name directly from query
+            if not policy_id:
+                known_policies = ['NREGA', 'PM-KISAN', 'MGNREGA', 'PM-KISAN', 'Ayushman', 'PMJAY',
+                                  'Ujjwala', 'Jan-Dhan', 'PMAY', 'DBT', 'PDS', 'ICDS', 'SSA',
+                                  'RSBY', 'NSAP', 'PMJDY', 'MUDRA', 'SBM']
+                for p in known_policies:
+                    if p.lower() in query_lower:
+                        policy_id = p.upper()
+                        break
+
+            if policy_id:
+                try:
+                    drift_data = compute_drift_timeline(policy_id)
+                    if drift_data.get("timeline"):
+                        reasoning["drift_timeline"] = drift_data["timeline"]
+                        reasoning["drift_max"] = drift_data.get("max_drift")
+                        reasoning["drift_policy"] = policy_id
+                        logger.info(f"Drift timeline generated for {policy_id}: {len(drift_data['timeline'])} points")
+                except Exception as drift_err:
+                    logger.warning(f"Drift computation failed for {policy_id}: {drift_err}")
         
         # 7. Translate Response
         # User UI Language takes precedence over detected language for the RESPONSE

@@ -172,22 +172,13 @@ def _compute_all_year_similarities_gpu(
 def compute_drift_timeline(
     policy_id: str,
     modality: Optional[str] = None
-) -> Optional[List[Dict[str, Any]]]:
+) -> Dict[str, Any]:
     """
     Compute semantic drift timeline for a policy across years.
 
-    AMD Optimization:
-      - Year centroids computed on GPU (_compute_centroid_gpu)
-      - All consecutive-year cosine similarities computed via a single
-        batched GPU matrix multiply (_compute_all_year_similarities_gpu)
-      - Falls back cleanly to EPYC numpy for small datasets
-
-    Args:
-        policy_id: Policy identifier (e.g. "NREGA")
-        modality: Optional filter ("budget" | "news" | "temporal")
-
     Returns:
-        List of drift-period dicts, or None if insufficient data.
+        Dict with 'timeline' (list of drift entries) and 'max_drift' (highest drift entry),
+        or empty dict if insufficient data.
     """
     where_filter: Dict[str, Any] = {"policy_id": policy_id}
     if modality:
@@ -197,27 +188,39 @@ def compute_drift_timeline(
         results = get_all_documents(where=where_filter, include_embeddings=True)
     except Exception as e:
         logger.error(f"Failed to retrieve drift data: {e}")
-        return None
+        return {}
 
     # ── Group embeddings by year ──────────────────────────────────────────────
     years_data: Dict[str, List[np.ndarray]] = {}
     embeddings = results.get("embeddings")
-    if not embeddings or len(embeddings) == 0:
-        logger.warning(f"No embeddings found for {policy_id}")
-        return None
+    metadatas = results.get("metadatas")
 
-    for i, embedding in enumerate(embeddings):
-        metadata = results["metadatas"][i]
+    # Fix: numpy arrays can't be tested with `not arr` — use len() instead
+    if embeddings is None or len(embeddings) == 0:
+        logger.warning(f"No embeddings found for {policy_id}")
+        return {}
+
+    if metadatas is None or len(metadatas) == 0:
+        logger.warning(f"No metadatas found for {policy_id}")
+        return {}
+
+    for i in range(len(embeddings)):
+        metadata = metadatas[i] if i < len(metadatas) else {}
         year = metadata.get("year")
         if year:
-            if year not in years_data:
-                years_data[year] = []
-            years_data[year].append(np.array(embedding, dtype=np.float32))
+            year_str = str(year)
+            if year_str not in years_data:
+                years_data[year_str] = []
+            emb = embeddings[i]
+            if isinstance(emb, np.ndarray):
+                years_data[year_str].append(emb.astype(np.float32))
+            else:
+                years_data[year_str].append(np.array(emb, dtype=np.float32))
 
     # ── Validate minimum requirements ─────────────────────────────────────────
     if len(years_data) < MIN_YEARS_FOR_TIMELINE:
         logger.warning(f"Insufficient years for drift: {len(years_data)} years")
-        return None
+        return {}
 
     valid_years: Dict[int, List[np.ndarray]] = {}
     for year_str, vectors in years_data.items():
@@ -228,19 +231,20 @@ def compute_drift_timeline(
                 logger.warning(f"Invalid year format: {year_str}")
 
     if len(valid_years) < MIN_YEARS_FOR_TIMELINE:
-        return None
+        return {}
 
     # ── GPU centroid computation ───────────────────────────────────────────────
     year_centroids: Dict[int, np.ndarray] = {}
     for year_int, vecs in valid_years.items():
         centroid = _compute_centroid_gpu(vecs)
-        if np.linalg.norm(centroid) > 0:
+        norm = float(np.linalg.norm(centroid))
+        if norm > 0:
             year_centroids[year_int] = centroid
         else:
             logger.warning(f"Zero centroid for year {year_int}, skipping")
 
     if len(year_centroids) < MIN_YEARS_FOR_TIMELINE:
-        return None
+        return {}
 
     # ── GPU batched similarity (all pairs in one kernel) ──────────────────────
     similarity_map = _compute_all_year_similarities_gpu(year_centroids)
@@ -265,13 +269,13 @@ def compute_drift_timeline(
             "samples_year1": len(valid_years[year_from]),
             "samples_year2": len(valid_years[year_to]),
             "similarity":   round(similarity, 4),
-            "computed_on":  DEVICE,          # tells judges "AMD GPU" or "EPYC CPU"
+            "computed_on":  DEVICE,
         }
         timeline.append(entry)
 
         if drift_score > DRIFT_CRITICAL_THRESHOLD:
             logger.warning(
-                f"CRITICAL drift: {policy_id} {year_from}→{year_to} "
+                f"CRITICAL drift: {policy_id} {year_from}->{year_to} "
                 f"(score={drift_score:.3f})"
             )
 
@@ -279,7 +283,16 @@ def compute_drift_timeline(
         f"[AMD] Drift timeline for {policy_id}: {len(timeline)} transitions, "
         f"device={DEVICE}"
     )
-    return timeline
+
+    # Find max drift entry
+    max_drift = max(timeline, key=lambda p: p["drift_score"]) if timeline else None
+
+    return {
+        "timeline": timeline,
+        "max_drift": max_drift,
+        "policy_id": policy_id,
+        "device": DEVICE,
+    }
 
 
 def find_max_drift(
@@ -287,10 +300,8 @@ def find_max_drift(
     modality: Optional[str] = None
 ) -> Optional[Dict[str, Any]]:
     """Return the year-pair with highest semantic drift."""
-    timeline = compute_drift_timeline(policy_id, modality)
-    if not timeline:
-        return None
-    return max(timeline, key=lambda p: p["drift_score"])
+    result = compute_drift_timeline(policy_id, modality)
+    return result.get("max_drift")
 
 
 def _classify_drift_severity(drift_score: float) -> str:
